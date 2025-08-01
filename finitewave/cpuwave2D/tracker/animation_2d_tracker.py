@@ -67,17 +67,18 @@ class Animation2DTracker(Tracker):
 
         The frames are saved in the specified directory as NumPy files.
         """
-        frame = self.model.__dict__[self.variable_name]
+        frame = self.model.__dict__[self.variable_name].copy()
+        frame[self.model.cardiac_tissue.mesh != 1] = np.nan
         dir_path = Path(self.path, self.dir_name)
 
-        np.save(dir_path.joinpath(str(self._frame_counter)
-                                  ).with_suffix(".npy"),
-                frame.astype(self.frame_type))
+        np.save(
+            dir_path.joinpath(str(self._frame_counter)).with_suffix(".npy"),
+            frame.astype(self.frame_type),
+        )
 
         self._frame_counter += 1
 
-    def write(self, shape_scale=1, fps=12, cmap="coolwarm", clim=[0, 1],
-              clear=False, prog_bar=True):
+    def write( self, shape_scale=1, fps=12, cmap="coolwarm", clim=[0, 1], clear=False, prog_bar=True):
         """
         Creates an animation from the saved frames using the Animation2DBuilder
         class. Fibrosis and boundaries will be shown in black.
@@ -101,15 +102,13 @@ class Animation2DTracker(Tracker):
         """
         animation_builder = Animation2DBuilder()
         path = Path(self.path, self.dir_name)
-        mask = self.model.cardiac_tissue.mesh != 1
-
         animation_builder.write(path,
                                 animation_name=self.file_name,
-                                mask=mask,
+                                mask=None,
                                 shape_scale=shape_scale,
                                 fps=fps,
                                 clim=clim,
-                                shape=mask.shape,
+                                shape=self.model.cardiac_tissue.mesh.shape,
                                 cmap=cmap,
                                 clear=clear,
                                 prog_bar=prog_bar)
