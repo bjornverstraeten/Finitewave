@@ -11,9 +11,18 @@ class Animation2DBuilder:
     def __init__(self):
         pass
 
-    def write(self, path, animation_name='animation', mask=None, shape_scale=1,
-              fps=12, clim=[0, 1], shape=(100, 100), cmap="coolwarm",
-              clear=False, prog_bar=False):
+    def write(
+            self,
+            path,
+            path_save=None,
+            animation_name='animation',
+            mask=None,
+            shape_scale=1,
+            fps=12,
+            clim=[0, 1],
+            shape=(100, 100),
+            cmap="coolwarm",
+            prog_bar=False):
         """
         Write an animation from a folder with snapshots.
 
@@ -21,6 +30,9 @@ class Animation2DBuilder:
         ----------
         path : str or Path
             Path to the folder with snapshots.
+        path_save : str or Path, optional
+            Path to save the animation file. If None, it will be saved in the
+            parent directory of `path`.
         animation_name : str
             Name of the animation file.
         mask : ndarray
@@ -35,13 +47,15 @@ class Animation2DBuilder:
             Shape of the frames.
         cmap : str
             Matplotlib colormap to use.
-        clear : bool
-            Clear the snapshot folder after writing the animation.
         prog_bar : bool
             Show progress bar.
         """
         path = Path(path)
-        path_save = Path(animation_name).with_suffix(".mp4")
+
+        if path_save is None:
+            path_save = path.parent
+
+        path_save = Path(path_save).joinpath(f"{animation_name}.mp4")
 
         files = natsorted(path.glob("*.npy"))
 
@@ -81,6 +95,3 @@ class Animation2DBuilder:
         # Close the FFmpeg process
         process.stdin.close()
         process.wait()
-
-        if clear:
-            shutil.rmtree(path)

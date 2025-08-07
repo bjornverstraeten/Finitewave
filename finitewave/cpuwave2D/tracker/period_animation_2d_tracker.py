@@ -33,7 +33,6 @@ class PeriodAnimation2DTracker(LocalActivationTime2DTracker):
         super().__init__()
 
         self.dir_name = "period"   # Directory to save the period maps
-        self.file_name = "period"  # File name for saving the period maps
         self.overwrite = False     # Overwrite existing period maps
         self._frame_counter = 0    # Counter to track the current frame number
 
@@ -76,13 +75,25 @@ class PeriodAnimation2DTracker(LocalActivationTime2DTracker):
                      ).with_suffix(".npy"), self.period_map)
         self._frame_counter += 1
 
-    def write(self, shape_scale=3, fps=10, clim=None, cmap="viridis",
-              clear=True, prog_bar=True):
+    def write(self,
+              path=None,
+              animation_name=None,
+              shape_scale=3,
+              fps=10,
+              clim=None,
+              cmap="viridis",
+              clear=True,
+              prog_bar=True):
         """
         Creates an animation from the saved period maps.
 
         Parameters
         ----------
+        path : str or Path, optional
+            Path to save the animation file. If None, it will be saved in the
+            `self.path`.
+        animation_name : str, optional
+            Name of the animation file. Defaults to the directory name.
         shape_scale : int, optional
             The scaling factor for the shape of the period map.
         fps : int, optional
@@ -97,16 +108,29 @@ class PeriodAnimation2DTracker(LocalActivationTime2DTracker):
             Whether to show a progress bar during the animation creation.
         """
         animation_builder = Animation2DBuilder()
-        path = Path(self.path, self.dir_name)
+        path_load = Path(self.path, self.dir_name)
+
+        if path is None:
+            path_save = self.path
+        else:
+            path_save = Path(path)
+
+        if animation_name is None:
+            animation_name = self.dir_name
+
         mask = self.model.cardiac_tissue.mesh != 1
 
         animation_builder.write(path,
-                                animation_name=self.file_name,
+                                path_save=path_save,
+                                animation_name=animation_name,
                                 mask=mask,
                                 shape_scale=shape_scale,
                                 fps=fps,
                                 clim=clim,
                                 shape=mask.shape,
                                 cmap=cmap,
-                                clear=clear,
                                 prog_bar=prog_bar)
+
+        if clear:
+            import shutil
+            shutil.rmtree(path_load)

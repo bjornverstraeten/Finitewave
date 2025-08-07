@@ -38,18 +38,30 @@ class Animation3DBuilder:
         raise ValueError("Mask and scalar must have the same shape, or scalar"
                          + " must have the same shape as mask[mask > 0]")
 
-    def write(self, path, mask=None, path_save=None, window_size=(800, 800),
-              clim=[0, 1], scalar_name="Scalar", animation_name="animation",
-              cmap="viridis", scalar_bar=False, format="mp4", prog_bar=True,
-              **kwargs):
+    def write(
+            self,
+            path,
+            path_save=None,
+            animation_name="animation",
+            mask=None,
+            window_size=(800, 800),
+            clim=[0, 1],
+            scalar_name="Scalar",
+            cmap="viridis",
+            scalar_bar=False,
+            format="mp4",
+            prog_bar=True,
+            **kwargs):
         """Write the animation to a file.
 
         Args:
             path (str): Path to the snapshot folder.
-            mask (np.array, optional): Mask to apply to the scalar field.
-                Defaults to None.
             path_save (str, optional): Path to save the animation.
                 Defaults is parent directory of path.
+            animation_name (str, optional): Name of the animation.
+                Defaults to "animation".
+            mask (np.array, optional): Mask to apply to the scalar field.
+                Defaults to None.
             window_size (tuple, optional): Size of the window.
                 Defaults to (800, 800).
             clim (list, optional): Color limits. Defaults to [0, 1].

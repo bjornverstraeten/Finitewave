@@ -77,5 +77,7 @@ aliev_panfilov.tracker_sequence = tracker_sequence
 aliev_panfilov.run()
 
 # write animation and clear the snapshot folder
+# !Note: for ionic models use clim=[-90, 40] or similar to show the activity
+# !correctly
 animation_tracker.write(format='mp4', framerate=10, quality=9,
-                        clear=True, clim=[0, 1]) # !Note: for ionic models use clim=[-90, 40] or similar to show the activity correctly
+                        clear=True, clim=[0, 1])

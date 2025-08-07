@@ -81,14 +81,26 @@ class AnimationSlice3DTracker(Animation2DTracker):
         if self.slice_z is not None:
             return array[:, :, self.slice_z]
 
-    def write(self, shape_scale=1, fps=12, cmap="coolwarm", clim=[0, 1],
-              clear=False, prog_bar=True):
+    def write(self,
+              path=None,
+              animation_name=None,
+              shape_scale=1,
+              fps=12,
+              cmap="coolwarm",
+              clim=[0, 1],
+              clear=False,
+              prog_bar=True):
         """
         Creates an animation from the saved frames using the Animation2DBuilder
         class. Fibrosis and boundaries will be shown in black.
 
         Parameters
         ----------
+        path : str or Path, optional
+            Path to save the animation file. If None, it will be saved in the
+            `self.path`.
+        animation_name : str, optional
+            Name of the animation file. Defaults to the directory name.
         shape_scale : int, optional
             Scale factor for the frame size. The default is 5.
         fps : int, optional
@@ -105,11 +117,20 @@ class AnimationSlice3DTracker(Animation2DTracker):
             The default is True.
         """
         animation_builder = Animation2DBuilder()
-        path = Path(self.path, self.dir_name)
+        path_load = Path(self.path, self.dir_name)
+        if path is None:
+            path_save = self.path
+        else:
+            path_save = Path(path)
+
+        if animation_name is None:
+            animation_name = self.dir_name
+
         mask = self.select_frame(self.model.cardiac_tissue.mesh) != 1
 
-        animation_builder.write(path,
-                                animation_name=self.file_name,
+        animation_builder.write(path_load,
+                                path_save=path_save,
+                                animation_name=animation_name,
                                 mask=mask,
                                 shape_scale=shape_scale,
                                 fps=fps,
