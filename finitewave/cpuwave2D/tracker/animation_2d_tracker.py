@@ -39,7 +39,19 @@ class Animation2DTracker(Tracker):
         self.frame_type = "float64"   # Default frame format settings
         self._frame_counter = 0       # Internal frame counter
         self.overwrite = True         # Overwrite existing frames
-        self.file_name = "animation"  # Name of the animation file
+        self._file_name = None        # Name of the animation file
+
+    @property
+    def file_name(self):
+        if self._file_name is not None:
+            return self._file_name
+
+        path = Path(self.path, self.dir_name).parent
+        return path / "animation"
+
+    @file_name.setter
+    def file_name(self, file_name):
+        self._file_name = file_name
 
     def initialize(self, model):
         """
