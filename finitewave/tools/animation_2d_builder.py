@@ -41,7 +41,7 @@ class Animation2DBuilder:
             Show progress bar.
         """
         path = Path(path)
-        path_save = path.parent.joinpath(animation_name).with_suffix(".mp4")
+        path_save = Path(animation_name).with_suffix(".mp4")
 
         files = natsorted(path.glob("*.npy"))
 
