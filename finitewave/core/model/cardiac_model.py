@@ -127,7 +127,7 @@ class CardiacModel(ABC):
 
         self.weights = self.stencil.compute_weights(self, self.cardiac_tissue)
 
-    def run(self, initialize=True, num_of_theads=None):
+    def run(self, initialize=True, num_of_threads=None):
         """
         Runs the simulation loop. Handles stimuli, diffusion, ionic kernel
         updates, and tracking.
@@ -143,13 +143,13 @@ class CardiacModel(ABC):
 
         numba.set_num_threads(numba.config.NUMBA_NUM_THREADS)
 
-        if num_of_theads is not None:
-            if num_of_theads > numba.config.NUMBA_NUM_THREADS:
+        if num_of_threads is not None:
+            if num_of_threads > numba.config.NUMBA_NUM_THREADS:
                 warnings.warn(
-                    f"Selected number of threads ({num_of_theads}) exceeds the available threads ({numba.config.NUMBA_NUM_THREADS}). "
+                    f"Selected number of threads ({num_of_threads}) exceeds the available threads ({numba.config.NUMBA_NUM_THREADS}). "
                     f"Using the maximum available threads instead."
                 )
-            num_of_theads = min(num_of_theads, numba.config.NUMBA_NUM_THREADS)
+            num_of_theads = min(num_of_threads, numba.config.NUMBA_NUM_THREADS)
             numba.set_num_threads(num_of_theads)
 
         if self.t_max < self.t:
