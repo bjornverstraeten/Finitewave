@@ -1,6 +1,6 @@
 from numba import njit, prange
 
-from finitewave.cpuwave2D.model.aliev_panfilov_2d import AlievPanfilov2D, calc_v
+from finitewave.cpuwave2D.model.aliev_panfilov_2d import AlievPanfilov2D, calc_dv, calc_rhs
 from finitewave.cpuwave3D.stencil.isotropic_stencil_3d import (
     IsotropicStencil3D
 )
@@ -25,7 +25,7 @@ class AlievPanfilov3D(AlievPanfilov2D):
         """
         ionic_kernel_3d(self.u_new, self.u, self.v,
                         self.cardiac_tissue.myo_indexes, self.dt,
-                        self.a, self.k, self.eap, self.mu_1, self.mu_2)
+                        self.a, self.k, self.eps, self.mu1, self.mu2)
 
     def select_stencil(self, cardiac_tissue):
         """
@@ -51,7 +51,7 @@ class AlievPanfilov3D(AlievPanfilov2D):
 
 
 @njit(parallel=True)
-def ionic_kernel_3d(u_new, u, v, indexes, dt, a, k, eap, mu_1, mu_2):
+def ionic_kernel_3d(u_new, u, v, indexes, dt, a, k, eps, mu1, mu2):
     """
     Computes the ionic kernel for the Aliev-Panfilov 3D model.
 
@@ -78,8 +78,7 @@ def ionic_kernel_3d(u_new, u, v, indexes, dt, a, k, eap, mu_1, mu_2):
         j = (ii % (n_j*n_k))//n_k
         k_ = (ii % (n_j*n_k)) % n_k
         
-        v[i, j, k_] = calc_v(v[i, j, k_], u[i, j, k_], dt, a, k, eap, mu_1, mu_2)
+        v[i, j, k_] += dt*calc_dv(v[i, j, k_], u[i, j, k_], a, k, eps, mu1, mu2)
 
-        u_new[i, j, k_] += dt * (- k * u[i, j, k_] * (u[i, j, k_] - a) * (u[i, j, k_] - 1.) -
-                            u[i, j, k_] * v[i, j, k_])
+        u_new[i, j, k_] += dt * calc_rhs(u[i, j, k_], v[i, j, k_], a, k)
 

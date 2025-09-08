@@ -9,6 +9,15 @@ from finitewave.cpuwave2D.stencil.isotropic_stencil_2d import (
     IsotropicStencil2D
 )
 
+from finitewave.cpuwave2D.model._registry import load_ops
+from finitewave.cpuwave2D.model._jitwrap import wrap_calc
+
+ops = load_ops("aliev_panfilov")
+jit_ops = wrap_calc(ops)
+
+calc_dv   = jit_ops["calc_dv"]
+calc_rhs = jit_ops["calc_rhs"]
+
 
 class AlievPanfilov2D(CardiacModel):
     """
@@ -39,7 +48,7 @@ class AlievPanfilov2D(CardiacModel):
         Excitability threshold parameter.
     k : float
         Strength of the nonlinear source term (governs spike shape).
-    eap : float
+    eps : float
         Baseline recovery rate.
     mu_1 : float
         Recovery rate coefficient (scales v feedback).
@@ -84,15 +93,17 @@ class AlievPanfilov2D(CardiacModel):
         self.npfloat    = 'float64'
 
         # model parameters
-        self.a    = 0.1
-        self.k    = 8.0
-        self.eap  = 0.01
-        self.mu_1 = 0.2
-        self.mu_2 = 0.3
+        parameters = ops.get_parameters()
+        self.a   = parameters["a"]
+        self.k   = parameters["k"]
+        self.eps = parameters["eps"]
+        self.mu1 = parameters["mu1"]
+        self.mu2 = parameters["mu2"]
 
         # initial conditions
-        self.init_u = 0.0
-        self.init_v = 0.0
+        variables = ops.get_variables()
+        self.init_u = variables["u"]
+        self.init_v = variables["v"]
 
     def initialize(self):
         """
@@ -107,7 +118,7 @@ class AlievPanfilov2D(CardiacModel):
         Executes the ionic kernel for the Aliev-Panfilov model.
         """
         ionic_kernel_2d(self.u_new, self.u, self.v, self.cardiac_tissue.myo_indexes, self.dt, 
-                        self.a, self.k, self.eap, self.mu_1, self.mu_2)
+                        self.a, self.k, self.eps, self.mu1, self.mu2)
 
     def select_stencil(self, cardiac_tissue):
         """
@@ -130,48 +141,8 @@ class AlievPanfilov2D(CardiacModel):
 
         return AsymmetricStencil2D()
 
-@njit
-def calc_v(v, u, dt, a, k, eap, mu_1, mu_2):
-    """
-    Computes the update of the recovery variable v for the Aliev–Panfilov model.
-
-    This function implements the ordinary differential equation governing the
-    evolution of the recovery variable `v`, which models the refractoriness of
-    the cardiac tissue. The rate of recovery depends on both `v` and `u`, with a
-    nonlinear interaction term involving a cubic expression in `u`.
-
-    Parameters
-    ----------
-    v : float
-        Current value of the recovery variable.
-    u : float
-        Current value of the transmembrane potential.
-    dt : float
-        Time step for integration.
-    a : float
-        Excitability threshold.
-    k : float
-        Strength of the nonlinear source term.
-    eap : float
-        Baseline recovery rate.
-    mu_1 : float
-        Recovery scaling parameter.
-    mu_2 : float
-        Offset parameter for recovery rate.
-
-    Returns
-    -------
-    float
-        Updated value of the recovery variable `v`.
-    """
-
-    v += (- dt * (eap + (mu_1 * v) / (mu_2 + u)) *
-            (v + k * u * (u - a - 1.)))
-    return v
-
-
 @njit(parallel=True)
-def ionic_kernel_2d(u_new, u, v, indexes, dt, a, k, eap, mu_1, mu_2):
+def ionic_kernel_2d(u_new, u, v, indexes, dt, a, k, eps, mu1, mu2):
     """
     Computes the ionic kernel for the Aliev-Panfilov 2D model.
 
@@ -196,8 +167,7 @@ def ionic_kernel_2d(u_new, u, v, indexes, dt, a, k, eap, mu_1, mu_2):
         i = int(ii / n_j)
         j = ii % n_j
 
-        v[i, j] = calc_v(v[i, j], u[i, j], dt, a, k, eap, mu_1, mu_2)
+        v[i, j] += dt*calc_dv(v[i, j], u[i, j], a, k, eps, mu1, mu2)
 
-        u_new[i, j] += dt * (- k * u[i, j] * (u[i, j] - a) * (u[i, j] - 1.) -
-                            u[i, j] * v[i, j])
+        u_new[i, j] += dt * calc_rhs(u[i, j], v[i, j], a, k)
 
