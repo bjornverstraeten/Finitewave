@@ -8,6 +8,28 @@ from finitewave.cpuwave2D.stencil.isotropic_stencil_2d import (
     IsotropicStencil2D
 )
 
+from finitewave.cpuwave2D.model._registry import load_ops
+from finitewave.cpuwave2D.model._jitwrap import wrap_calc
+
+ops = load_ops("luo_rudy_91")
+jit_ops = wrap_calc(ops)
+
+calc_rhs  = jit_ops["calc_rhs"]
+calc_dm   = jit_ops["calc_dm"]
+calc_dh   = jit_ops["calc_dh"]
+calc_dj   = jit_ops["calc_dj"]
+calc_dd   = jit_ops["calc_dd"]
+calc_df   = jit_ops["calc_df"]
+calc_dx   = jit_ops["calc_dx"]
+calc_dcai = jit_ops["calc_dcai"]
+calc_ina  = jit_ops["calc_ina"]
+calc_isk  = jit_ops["calc_isk"]
+calc_ik   = jit_ops["calc_ik"]
+calc_ik1  = jit_ops["calc_ik1"]
+calc_ikp  = jit_ops["calc_ikp"]
+calc_ib   = jit_ops["calc_ib"]
+
+
 
 class LuoRudy912D(CardiacModel):
     """
@@ -69,38 +91,36 @@ class LuoRudy912D(CardiacModel):
         self.state_vars = ["u", "m", "h", "j", "d", "f", "x", "cai"]
         self.npfloat = 'float64'
 
-        # Ion Channel Conductances (mS/µF)
-        self.gna = 23.0     # Fast sodium (Na+) conductance
-        self.gsi = 0.09     # Slow inward calcium (Ca2+) conductance
-        self.gk  = 0.282    # Time-dependent potassium (K+) conductance
-        self.gk1 = 0.6047   # Inward rectifier potassium (K1) conductance
-        self.gkp = 0.0183   # Plateau potassium (Kp) conductance
-        self.gb  = 0.03921  # Background conductance (leak current)
-
-        # Extracellular and Intracellular Ion Concentrations (mM)
-        self.ko  = 5.4      # Extracellular potassium concentration
-        self.ki  = 145.0    # Intracellular potassium concentration
-        self.nai = 18.0     # Intracellular sodium concentration
-        self.nao = 140.0    # Extracellular sodium concentration
-        self.cao = 1.8      # Extracellular calcium concentration
-
-        # Physical Constants
-        self.R = 8.314      # Universal gas constant (J/(mol·K))
-        self.T = 310.0      # Temperature (Kelvin, 37°C)
-        self.F = 96.5       # Faraday constant (C/mmol)
-
-        # Ion Permeability Ratios
-        self.PR_NaK = 0.01833  # Na+/K+ permeability ratio
+        # model parameters
+        parameters = ops.get_parameters()
+        self.gna  = parameters["gna"]
+        self.gsi  = parameters["gsi"]
+        self.gk   = parameters["gk"]
+        self.gk1  = parameters["gk1"]
+        self.gkp  = parameters["gkp"]
+        self.gb   = parameters["gb"]
+        self.ko   = parameters["ko"]
+        self.ki   = parameters["ki"]
+        self.nao  = parameters["nao"]
+        self.nai  = parameters["nai"]
+        self.cao  = parameters["cao"]
+        self.R    = parameters["R"]
+        self.T    = parameters["T"]
+        self.F    = parameters["F"]
+        self.PR_NaK = parameters["PR_NaK"]
+        self.E_Na   = parameters["E_Na"]
+        self.E_K1   = parameters["E_K1"]
 
         # initial conditions
-        self.init_u   = -84.5
-        self.init_m   = 0.0017
-        self.init_h   = 0.9832
-        self.init_j   = 0.995484
-        self.init_d   = 0.000003
-        self.init_f   = 1.0
-        self.init_x   = 0.0057
-        self.init_cai = 0.0002
+        variables = ops.get_variables()
+        self.init_u = variables["u"]
+        self.init_m = variables["m"]
+        self.init_h = variables["h"]
+        self.init_j = variables["j"]
+        self.init_d = variables["d"]
+        self.init_f = variables["f"]
+        self.init_x = variables["x"]
+        self.init_cai = variables["cai"]
 
     def initialize(self):
         """
@@ -113,14 +133,15 @@ class LuoRudy912D(CardiacModel):
         super().initialize()
         shape = self.cardiac_tissue.mesh.shape
 
-        self.u = self.init_u * np.ones(shape, dtype=self.npfloat)
+        self.u     = self.init_u * np.ones(shape, dtype=self.npfloat)
         self.u_new = self.u.copy()
-        self.m = self.init_m * np.ones(shape, dtype=self.npfloat)
-        self.h = self.init_h * np.ones(shape, dtype=self.npfloat)
-        self.j = self.init_j * np.ones(shape, dtype=self.npfloat)
-        self.d = self.init_d * np.ones(shape, dtype=self.npfloat)
-        self.f =  self.init_f * np.ones(shape, dtype=self.npfloat)
-        self.x =  self.init_x * np.ones(shape, dtype=self.npfloat)
+
+        self.m   = self.init_m * np.ones(shape, dtype=self.npfloat)
+        self.h   = self.init_h * np.ones(shape, dtype=self.npfloat)
+        self.j   = self.init_j * np.ones(shape, dtype=self.npfloat)
+        self.d   = self.init_d * np.ones(shape, dtype=self.npfloat)
+        self.f   = self.init_f * np.ones(shape, dtype=self.npfloat)
+        self.x   = self.init_x * np.ones(shape, dtype=self.npfloat)
         self.cai = self.init_cai * np.ones(shape, dtype=self.npfloat)
 
     def run_ionic_kernel(self):
@@ -132,7 +153,8 @@ class LuoRudy912D(CardiacModel):
                         self.m, self.h, self.j, self.d,self.f, self.x, self.cai, 
                         self.cardiac_tissue.myo_indexes, self.dt, 
                         self.gna, self.gsi, self.gk, self.gk1, self.gkp, self.gb, 
-                        self.ko, self.ki, self.nai, self.nao, self.cao, self.R, self.T, self.F, self.PR_NaK)
+                        self.ko, self.ki, self.nai, self.nao, self.cao, 
+                        self.R, self.T, self.F, self.PR_NaK, self.E_Na, self.E_K1)
 
     def select_stencil(self, cardiac_tissue):
         """
@@ -155,296 +177,9 @@ class LuoRudy912D(CardiacModel):
 
         return AsymmetricStencil2D()
 
-@njit
-def calc_gating_var(var, dt, alpha, beta):
-    """
-    Computes the gating variable dynamics based on the Hodgkin-Huxley formalism.
-
-    Parameters
-    ----------
-    var : float
-        Current value of the gating variable.
-    dt : float
-        Time step [ms].
-    alpha : float
-        Rate constant for activation.
-    beta : float
-        Rate constant for inactivation.
-
-    Returns
-    -------
-    var_new : float
-        Updated gating variable.
-    """
-    tau = 1. / (alpha + beta)
-    inf = alpha / (alpha + beta)
-    var += dt * (inf - var) / tau
-    return var
-
-@njit
-def calc_ina(u, dt, m, h, j, E_Na, gna):
-    """
-    Computes the fast inward sodium current (I_Na) and updates gating variables m, h, j.
-
-    I_Na is responsible for the rapid depolarization (phase 0) of the action potential. 
-    It depends on three gates:
-    - m: activation gate (opens quickly),
-    - h: fast inactivation gate,
-    - j: slow inactivation gate.
-
-    Gating dynamics follow Hodgkin-Huxley kinetics with voltage-dependent time constants 
-    and steady-state values. I_Na = g_Na * m^3 * h * j * (u - E_Na).
-
-    Parameters
-    ----------
-    u : float
-        Membrane potential [mV].
-    dt : float
-        Time step [ms].
-    m, h, j : float
-        Gating variables for the sodium channel.
-    E_Na : float
-        Reversal potential for Na⁺ [mV].
-    gna : float
-        Maximal sodium conductance [mS/μF].
-
-    Returns
-    -------
-    ina : float
-        Fast sodium current [μA/μF].
-    m, h, j : float
-        Updated gating variables.
-    """
-    alpha_h, beta_h, beta_J, alpha_J = 0, 0, 0, 0
-    if u >= -40.:
-        beta_h = 1. / (0.13 * (1 + np.exp((u + 10.66) / -11.1)))
-        beta_J = 0.3 * np.exp(-2.535 * 1e-07 *
-                                u) / (1 + np.exp(-0.1 * (u + 32)))
-    else:
-        alpha_h = 0.135 * np.exp((80 + u) / -6.8)
-        beta_h = 3.56 * \
-            np.exp(0.079 * u) + 3.1 * 1e5 * np.exp(0.35 * u)
-        beta_J = 0.1212 * \
-            np.exp(-0.01052 * u) / \
-            (1 + np.exp(-0.1378 * (u + 40.14)))
-        alpha_J = (-1.2714 * 1e5 * np.exp(0.2444 * u) - 3.474 * 1e-5 * np.exp(-0.04391 * u)) * \
-                    (u + 37.78) / (1 + np.exp(0.311 * (u + 79.23)))
-
-    alpha_m = 0.32 * (u + 47.13) / \
-        (1 - np.exp(-0.1 * (u + 47.13)))
-    beta_m = 0.08 * np.exp(-u / 11)
-
-    m = calc_gating_var(m, dt, alpha_m, beta_m)
-    h = calc_gating_var(h, dt, alpha_h, beta_h)
-    j = calc_gating_var(j, dt, alpha_J, beta_J)
-
-    return gna * m * m * m * h * j * (u - E_Na), m, h, j
-
-@njit
-def calc_isk(u, dt, d, f, cai, gsi):
-    """
-    Computes the slow inward calcium current (I_Si) and updates d, f, and intracellular calcium.
-
-    I_Si is primarily carried by L-type Ca²⁺ channels and governs the plateau (phase 2).
-    The reversal potential E_Si is dynamically calculated based on intracellular Ca²⁺ levels.
-
-    Calcium handling is simplified: part of I_Si is subtracted from intracellular Ca²⁺, 
-    while a constant leak term restores it toward a baseline.
-
-    Parameters
-    ----------
-    u : float
-        Membrane potential [mV].
-    dt : float
-        Time step [ms].
-    d, f : float
-        Activation and inactivation gates of the calcium channel.
-    cai : float
-        Intracellular calcium concentration [mM].
-    gsi : float
-        Maximal calcium conductance [mS/μF].
-
-    Returns
-    -------
-    I_Si : float
-        Slow inward calcium current [μA/μF].
-    d, f, cai : float
-        Updated gating variables and intracellular Ca²⁺.
-    """
-    E_Si = 7.7 - 13.0287 * np.log(cai)
-    I_Si = gsi * d * f * (u - E_Si)
-    alpha_d = 0.095 * \
-        np.exp(-0.01 * (u - 5)) / \
-        (1 + np.exp(-0.072 * (u - 5)))
-    beta_d = 0.07 * \
-        np.exp(-0.017 * (u + 44)) / \
-        (1 + np.exp(0.05 * (u + 44)))
-    alpha_f = 0.012 * \
-        np.exp(-0.008 * (u + 28)) / \
-        (1 + np.exp(0.15 * (u + 28)))
-    beta_f = 0.0065 * \
-        np.exp(-0.02 * (u + 30)) / \
-        (1 + np.exp(-0.2 * (u + 30)))
-    
-    d = calc_gating_var(d, dt, alpha_d, beta_d)
-    f = calc_gating_var(f, dt, alpha_f, beta_f)
-
-    cai += dt * (-0.0001 * I_Si + 0.07 * (0.0001 - cai))
-
-    return I_Si, d, f, cai
-
-@njit
-def calc_ik(u, dt, x, ko, ki, nao, nai, PR_NaK, R, T, F, gk):
-    """
-    Computes the time-dependent outward potassium current (I_K) and updates gate x.
-
-    This current drives late repolarization (phase 3) and is voltage- and time-dependent.
-    Reversal potential is calculated via the Goldman-Hodgkin-Katz equation 
-    (with sodium/potassium permeability ratio).
-
-    An auxiliary factor Xi introduces voltage-sensitive activation near -100 mV.
-
-    Parameters
-    ----------
-    u : float
-        Membrane potential [mV].
-    dt : float
-        Time step [ms].
-    x : float
-        Activation gate of the delayed rectifier K⁺ channel.
-    ko, ki : float
-        Extra-/intracellular potassium concentrations [mM].
-    nao, nai : float
-        Extra-/intracellular sodium concentrations [mM].
-    PR_NaK : float
-        Na⁺/K⁺ permeability ratio.
-    R, T, F : float
-        Gas constant, temperature [K], and Faraday constant.
-    gk : float
-        Maximum potassium conductance [mS/μF].
-
-    Returns
-    -------
-    I_K : float
-        Time-dependent potassium current [μA/μF].
-    x : float
-        Updated activation gate.
-    """
-    E_K = (R * T / F) * \
-        np.log((ko + PR_NaK * nao) / (ki + PR_NaK * nai))
-
-    G_K = gk * np.sqrt(ko / 5.4)
-
-    Xi = 0
-    if u > -100:
-        Xi = 2.837 * (np.exp(0.04 * (u + 77)) - 1) / \
-            ((u + 77) * np.exp(0.04 * (u + 35)))
-    else:
-        Xi = 1
-
-    I_K = G_K * x * Xi * (u - E_K)
-
-    alpha_x = 0.0005 * \
-        np.exp(0.083 * (u + 50)) / \
-        (1 + np.exp(0.057 * (u + 50)))
-    beta_x = 0.0013 * \
-        np.exp(-0.06 * (u + 20)) / \
-        (1 + np.exp(-0.04 * (u + 20)))
-    
-    x = calc_gating_var(x, dt, alpha_x, beta_x)
-
-    return I_K, x
-
-@njit
-def calc_ik1(u, ko, E_K1, gk1):
-    """
-    Computes the time-independent inward rectifier potassium current (I_K1).
-
-    I_K1 stabilizes the resting membrane potential and contributes to 
-    late repolarization. It is primarily active at negative voltages and 
-    follows a voltage-dependent gating-like term (K1_x).
-
-    Parameters
-    ----------
-    u : float
-        Membrane potential [mV].
-    ko : float
-        Extracellular potassium [mM].
-    E_K1 : float
-        Equilibrium potential for K1 current [mV].
-    gk1 : float
-        Maximum K1 conductance [mS/μF].
-
-    Returns
-    -------
-    I_K1 : float
-        Time-independent K⁺ current [μA/μF].
-    """
-    alpha_K1 = 1.02 / (1 + np.exp(0.2385 * (u - E_K1 - 59.215)))
-    beta_K1 = (0.49124 * np.exp(0.08032 * (u - E_K1 + 5.476)) + np.exp(0.06175 * (u - E_K1 - 594.31))) / \
-                (1 + np.exp(-0.5143 * (u - E_K1 + 4.753)))
-
-    K_1x = alpha_K1 / (alpha_K1 + beta_K1)
-
-    G_K1 = gk1 * np.sqrt(ko / 5.4)
-    I_K1 = G_K1 * K_1x * (u - E_K1)
-
-    return I_K1
-
-@njit
-def calc_ikp(u, E_K1, gkp):
-    """
-    Computes the plateau potassium current (I_Kp).
-
-    I_Kp is a small, quasi-steady outward current that operates in the 
-    plateau phase. Its activation is a sigmoid function of voltage.
-
-    Parameters
-    ----------
-    u : float
-        Membrane potential [mV].
-    ko : float
-        Extracellular potassium [mM].
-    E_K1 : float
-        Equilibrium potential (same as I_K1).
-    gkp : float
-        Plateau potassium conductance [mS/μF].
-
-    Returns
-    -------
-    I_Kp : float
-        Plateau potassium current [μA/μF].
-    """
-    E_Kp = E_K1
-    K_p = 1. / (1 + np.exp((7.488 - u) / 5.98))
-    I_Kp = gkp * K_p * (u - E_Kp)
-
-    return I_Kp
-
-@njit
-def calc_ib(u, gb):
-    """
-    Computes the non-specific background (leak) current.
-
-    This is a linear leak current contributing to resting potential maintenance.
-
-    Parameters
-    ----------
-    u : float
-        Membrane potential [mV].
-    gb : float
-        Background conductance [mS/μF].
-
-    Returns
-    -------
-    I_b : float
-        Background current [μA/μF].
-    """
-    return gb * (u + 59.87)
-
 
 @njit(parallel=True)
-def ionic_kernel_2d(u_new, u, m, h, j_, d, f, x, cai, indexes, dt, gna, gsi, gk, gk1, gkp, gb, ko, ki, nai, nao, cao, R, T, F, PR_NaK):
+def ionic_kernel_2d(u_new, u, m, h, j_, d, f, x, cai, indexes, dt, gna, gsi, gk, gk1, gkp, gb, ko, ki, nai, nao, cao, R, T, F, PR_NaK, E_Na, E_K1):
     """
     Computes the ionic currents and updates the state variables in the 2D
     Luo-Rudy 1991 cardiac model.
@@ -485,15 +220,24 @@ def ionic_kernel_2d(u_new, u, m, h, j_, d, f, x, cai, indexes, dt, gna, gsi, gk,
         j = ii % n_j
 
         # Fast sodium current:
-        ina, m[i, j], h[i, j], j_[i, j] = calc_ina(u[i, j], dt, m[i, j], h[i, j], j_[i, j], E_Na, gna)
+        m[i, j]  += dt*calc_dm(u[i, j], m[i, j])
+        h[i, j]  += dt*calc_dh(u[i, j], h[i, j])
+        j_[i, j] += dt*calc_dj(u[i, j], j_[i, j])
+
+        ina = calc_ina(u[i, j], m[i, j], h[i, j], j_[i, j], E_Na, gna)
 
         # Slow inward current:
-        isi, d[i, j], f[i, j], cai[i, j] = calc_isk(u[i, j], dt, d[i, j], f[i, j], cai[i, j], gsi)
+        d[i, j] += dt*calc_dd(u[i, j], d[i, j])
+        f[i, j] += dt*calc_df(u[i, j], f[i, j])
+
+        isi = calc_isk(u[i, j], d[i, j], f[i, j], cai[i, j], gsi)
+
+        cai[i, j] += dt*calc_dcai(cai[i, j], isi)
 
         # Time-dependent potassium current:
-        ik, x[i, j] = calc_ik(u[i, j], dt, x[i, j], ko, ki, nao, nai, PR_NaK, R, T, F, gk)
+        x[i, j] += dt*calc_dx(u[i, j], x[i, j])
 
-        E_K1 = (R * T / F) * np.log(ko / ki)
+        ik = calc_ik(u[i, j], x[i, j], ko, ki, nao, nai, PR_NaK, R, T, F, gk)
 
         # Time-independent potassium current:
         ik1 = calc_ik1(u[i, j], ko, E_K1, gk1)
@@ -504,10 +248,7 @@ def ionic_kernel_2d(u_new, u, m, h, j_, d, f, x, cai, indexes, dt, gna, gsi, gk,
         # Background current:
         ib = calc_ib(u[i, j], gb)
 
-        # Total time-independent potassium current:
-        ik1t = ik1 + ikp + ib
-
-        u_new[i, j] -= dt * (ina + isi + ik1t + ik)
+        u_new[i, j] += dt*calc_rhs(ina, isi, ik, ik1, ikp, ib)
 
 
 
