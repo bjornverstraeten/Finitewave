@@ -2,13 +2,9 @@ import numpy as np
 from numba import njit, prange
 
 from finitewave.cpuwave2D.model.luo_rudy91_2d import (
-    LuoRudy912D, 
-    calc_ina, 
-    calc_isk, 
-    calc_ik, 
-    calc_ik1, 
-    calc_ikp, 
-    calc_ib
+    LuoRudy912D, calc_dm, calc_dh, calc_dj, calc_dd, calc_df, calc_dx,
+    calc_dcai, calc_ina, calc_isk, calc_ik, calc_ik1, calc_ikp, calc_ib,
+    calc_rhs
 )
 from finitewave.cpuwave3D.stencil.isotropic_stencil_3d import (
     IsotropicStencil3D
@@ -36,7 +32,8 @@ class LuoRudy913D(LuoRudy912D):
                         self.f, self.x, self.cai,
                         self.cardiac_tissue.myo_indexes, self.dt, 
                         self.gna, self.gsi, self.gk, self.gk1, self.gkp, self.gb, 
-                        self.ko, self.ki, self.nai, self.nao, self.cao, self.R, self.T, self.F, self.PR_NaK)
+                        self.ko, self.ki, self.nai, self.nao, self.cao, 
+                        self.R, self.T, self.F, self.PR_NaK, self.E_Na, self.E_K1)
 
     def select_stencil(self, cardiac_tissue):
         """
@@ -61,7 +58,7 @@ class LuoRudy913D(LuoRudy912D):
 
 
 @njit(parallel=True)
-def ionic_kernel_3d(u_new, u, m, h, j_, d, f, x, cai, indexes, dt, gna, gsi, gk, gk1, gkp, gb, ko, ki, nai, nao, cao, R, T, F, PR_NaK):
+def ionic_kernel_3d(u_new, u, m, h, j_, d, f, x, cai, indexes, dt, gna, gsi, gk, gk1, gkp, gb, ko, ki, nai, nao, cao, R, T, F, PR_NaK, E_Na, E_K1):
     """
     Computes the ionic currents and updates the state variables in the 3D
     Luo-Rudy 1991 cardiac model.
@@ -104,15 +101,24 @@ def ionic_kernel_3d(u_new, u, m, h, j_, d, f, x, cai, indexes, dt, gna, gsi, gk,
         k = (ii % (n_j*n_k)) % n_k
 
         # Fast sodium current:
-        ina, m[i, j, k], h[i, j, k], j_[i, j, k] = calc_ina(u[i, j, k], dt, m[i, j, k], h[i, j, k], j_[i, j, k], E_Na, gna)
+        m[i, j, k]  += dt*calc_dm(u[i, j, k], m[i, j, k])
+        h[i, j, k]  += dt*calc_dh(u[i, j, k], h[i, j, k])
+        j_[i, j, k] += dt*calc_dj(u[i, j, k], j_[i, j, k])
+
+        ina = calc_ina(u[i, j, k], m[i, j, k], h[i, j, k], j_[i, j, k], E_Na, gna)
 
         # Slow inward current:
-        isi, d[i, j, k], f[i, j, k], cai[i, j, k] = calc_isk(u[i, j, k], dt, d[i, j, k], f[i, j, k], cai[i, j, k], gsi)
+        d[i, j, k] += dt*calc_dd(u[i, j, k], d[i, j, k])
+        f[i, j, k] += dt*calc_df(u[i, j, k], f[i, j, k])
+
+        isi = calc_isk(u[i, j, k], d[i, j, k], f[i, j, k], cai[i, j, k], gsi)
+
+        cai[i, j, k] += dt*calc_dcai(cai[i, j, k], isi)
 
         # Time-dependent potassium current:
-        ik, x[i, j, k] = calc_ik(u[i, j, k], dt, x[i, j, k], ko, ki, nao, nai, PR_NaK, R, T, F, gk)
+        x[i, j, k] += dt*calc_dx(u[i, j, k], x[i, j, k])
 
-        E_K1 = (R * T / F) * np.log(ko / ki)
+        ik = calc_ik(u[i, j, k], x[i, j, k], ko, ki, nao, nai, PR_NaK, R, T, F, gk)
 
         # Time-independent potassium current:
         ik1 = calc_ik1(u[i, j, k], ko, E_K1, gk1)
@@ -123,10 +129,4 @@ def ionic_kernel_3d(u_new, u, m, h, j_, d, f, x, cai, indexes, dt, gna, gsi, gk,
         # Background current:
         ib = calc_ib(u[i, j, k], gb)
 
-        # Total time-independent potassium current:
-        ik1t = ik1 + ikp + ib
-
-        # if i == 4 and j == 4:
-        #     print(cai[i, j], m[i, j]) 
-
-        u_new[i, j, k] -= dt * (ina + isi + ik1t + ik)
+        u_new[i, j, k] += dt*calc_rhs(ina, isi, ik, ik1, ikp, ib)
