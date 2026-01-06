@@ -28,7 +28,14 @@ class AlievPanfilovKernel:
             raise ValueError("Unsupported number of dimensions")
         
     def generate_observers(self):
-        return ""
+        if not self.observers:
+            return ""
+
+        lines = []
+        for obs in self.observers:
+            lines.append(obs["expr"])
+
+        return "\n        ".join(lines)
 
     def generate_cpu_numba(self):
         src = f"""

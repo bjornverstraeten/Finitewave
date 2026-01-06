@@ -22,6 +22,21 @@ calc_rhs = jit_ops["calc_rhs"]
 
 aliev_panfilov_kernel = None
 
+def build_aliev_panfilov_kernel(dimensions: int, scalar_params: tuple, array_params: tuple):
+    kgen = AlievPanfilovKernel()
+    kgen.dimensions = dimensions
+
+    kgen.scalars = list(set(kgen.scalars) | set(scalar_params))
+    kgen.arrays  = list(set(kgen.arrays)  | set(array_params))
+
+    src = kgen.generate_cpu_numba()
+
+    local = {}
+    glb = {"njit": njit, "prange": prange, "calc_dv": calc_dv, "calc_rhs": calc_rhs}
+    exec(src, glb, local)
+
+    return local["ionic_kernel_2d"], src
+
 
 class AlievPanfilovFDM(CardiacModel):
     """
@@ -117,24 +132,22 @@ class AlievPanfilovFDM(CardiacModel):
         self.u = self.var_u * np.ones_like(self.u, dtype=self.npfloat)
         self.v = self.var_v * np.ones_like(self.u, dtype=self.npfloat)
 
-        kernel_generator = AlievPanfilovKernel()
-        for par in self.parameters:
-            if isinstance(getattr(self, f"par_{par}"), (int, float)):
-                kernel_generator.scalars.append(par)
-            else:
-                kernel_generator.arrays.append(par)
-        local = {}
-        src_aliev_panfilov_kernel = kernel_generator.generate_cpu_numba()
-        print(src_aliev_panfilov_kernel)
-        exec(src_aliev_panfilov_kernel, {**globals(), "calc_dv": calc_dv, "calc_rhs": calc_rhs}, local)
-        global aliev_panfilov_kernel
-        aliev_panfilov_kernel = local["ionic_kernel_2d"]
+        scalar_params, array_params = [], []
+        for par_name in self.parameters.keys():
+            val = getattr(self, f"par_{par_name}")
+            (scalar_params if np.isscalar(val) else array_params).append(par_name)
+
+        self._kernel, src = build_aliev_panfilov_kernel(
+            dimensions=2,
+            scalar_params=tuple(sorted(scalar_params)),
+            array_params=tuple(sorted(array_params)),
+        )
 
     def run_ionic_kernel(self):
         """
         Executes the ionic kernel for the Aliev-Panfilov model.
         """
-        aliev_panfilov_kernel(self.u_new, self.cardiac_tissue.myo_indexes, self.dt, 
+        self._kernel(self.u_new, self.cardiac_tissue.myo_indexes, self.dt, 
                         self.u, self.v, self.par_a, self.par_k, self.par_mu1, self.par_mu2, self.par_eps)
 
     def select_stencil(self, cardiac_tissue):
