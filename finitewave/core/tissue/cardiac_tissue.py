@@ -21,6 +21,7 @@ class CardiacTissue(ABC):
     """
     def __init__(self):
         self.meta = {}
+        self.dimensions = None
         self.special_boundaries = None
 
     @property

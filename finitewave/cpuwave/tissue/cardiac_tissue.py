@@ -26,7 +26,7 @@ class CardiacTissue2D(CardiacTissue):
 
     def __init__(self, shape):
         super().__init__()
-        self.meta["dim"] = len(shape)
+        self.dimensions = len(shape)
         self.meta["shape"] = shape
         self.mesh = np.ones(shape, dtype=np.int8)
         self.conductivity = 1.0
@@ -39,12 +39,12 @@ class CardiacTissue2D(CardiacTissue):
         The boundaries are defined as the edges of the grid, and this method
         updates these edges in the mesh array.
         """
-        if self.meta["dim"] == 2:
+        if self.dimensions == 2:
             self._mesh[0, :] = 0
             self._mesh[:, 0] = 0
             self._mesh[-1, :] = 0
             self._mesh[:, -1] = 0
-        elif self.meta["dim"] == 3:
+        elif self.dimensions == 3:
             self.mesh[0, :, :] = 0
             self.mesh[:, 0, :] = 0
             self.mesh[:, :, 0] = 0

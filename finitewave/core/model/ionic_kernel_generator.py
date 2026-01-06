@@ -120,7 +120,7 @@ class IonicKernelGenerator:
         return code
 
     def kernel_func_name(self) -> str:
-        return "ionic_kernel_2d" if self.dimensions == 2 else "ionic_kernel_3d"
+        return "ionic_kernel"
 
     def kernel_base_args(self) -> list[str]:
         # common arguments: output, indexes, dt, (optional step)

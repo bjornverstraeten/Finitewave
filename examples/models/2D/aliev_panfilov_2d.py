@@ -30,7 +30,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import finitewave as fw
-from finitewave.fdm.model.aliev_panfilov_fdm import AlievPanfilovFDM
+from finitewave.cpuwave.model.aliev_panfilov import AlievPanfilov
 
 # create a tissue:
 n = 100
@@ -42,7 +42,7 @@ stim_sequence = fw.StimSequence()
 stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, 5, 0, m))
 
 # create model object and set up parameters:
-aliev_panfilov = AlievPanfilovFDM()
+aliev_panfilov = AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 50
