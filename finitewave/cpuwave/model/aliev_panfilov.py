@@ -1,31 +1,33 @@
 import numpy as np
-from numba import njit, prange
 
 from finitewave.core.model.cardiac_model import CardiacModel
 from finitewave.core.model.ionic_kernel_generator import IonicKernelGenerator
 
-from finitewave.cpuwave2D.stencil.asymmetric_stencil_2d import (
+from finitewave.cpuwave.stencil.sten2D.asymmetric_stencil_2d import (
     AsymmetricStencil2D
 )
-from finitewave.cpuwave2D.stencil.isotropic_stencil_2d import (
+from finitewave.cpuwave.stencil.sten2D.isotropic_stencil_2d import (
     IsotropicStencil2D
 )
-from finitewave.cpuwave3D.stencil.asymmetric_stencil_3d import (
+from finitewave.cpuwave.stencil.sten3D.asymmetric_stencil_3d import (
     AsymmetricStencil3D
 )
-from finitewave.cpuwave3D.stencil.isotropic_stencil_3d import (
+from finitewave.cpuwave.stencil.sten3D.isotropic_stencil_3d import (
     IsotropicStencil3D
 )
 
-from finitewave.cpuwave2D.model._registry import load_ops
-from finitewave.cpuwave2D.model._jitwrap import wrap_calc
+from finitewave.cpuwave.model._registry import load_ops, wrap_calc
+from finitewave.cpuwave.model._kernel_builder import build_kernel
 
 
-ops = load_ops("aliev_panfilov")
-jit_ops = wrap_calc(ops)
-
-calc_dv   = jit_ops["calc_dv"]
-calc_rhs = jit_ops["calc_rhs"]
+try:
+    ops = load_ops("aliev_panfilov")
+    jit_ops = wrap_calc(ops)
+except KeyError as e:
+    raise ImportError(
+        "Aliev–Panfilov model ops not found. "
+        # "Install model package: pip install aliev-panfilov-finitewave-model"
+    ) from e
 
 
 class AlievPanfilovKernel(IonicKernelGenerator):
@@ -45,38 +47,6 @@ class AlievPanfilovKernel(IonicKernelGenerator):
         v[i, j] += dt * dv
         u_new[i, j] += dt * rhs
 """
-    
-
-# @lru_cache(maxsize=64)
-def build_aliev_panfilov_kernel(dimensions: int, scalar_params: tuple, array_params: tuple, observers_key: tuple):
-    """
-    """
-    # ops loaded lazily here; ensures import of this module doesn't require plugins.
-    ops = load_ops("aliev_panfilov")
-    jit_ops = wrap_calc(ops)
-
-    kgen = AlievPanfilovKernel()
-    kgen.dimensions = dimensions
-
-    # allow user to override which params are arrays/scalars
-    kgen.scalars = list(set(kgen.scalars) | set(scalar_params))
-    kgen.arrays  = list(set(kgen.arrays)  | set(array_params))
-
-    # restore observers from the key
-    kgen.observers = [{"name": n, "expr": e} for (n, e) in observers_key]
-
-    src = kgen.generate_cpu_numba()
-
-    local = {}
-    glb = {
-        "calc_dv": jit_ops["calc_dv"],
-        "calc_rhs": jit_ops["calc_rhs"],
-    }
-    exec(src, glb, local)
-
-    fn_name = kgen.kernel_func_name()
-    return local[fn_name], src
-
 
 
 class AlievPanfilov(CardiacModel):
@@ -178,18 +148,28 @@ class AlievPanfilov(CardiacModel):
             val = getattr(self, f"par_{par_name}")
             (scalar_params if np.isscalar(val) else array_params).append(par_name)
 
-        self._kernel, src = build_aliev_panfilov_kernel(
-            dimensions=self.cardiac_tissue.mesh.ndim,
+        gen = AlievPanfilovKernel()
+        glb = {"calc_dv": jit_ops["calc_dv"], 
+               "calc_rhs": jit_ops["calc_rhs"]}
+
+        self._kernel, _ = build_kernel(
+            gen=gen,
+            glb=glb,
+            dimensions=self.cardiac_tissue.dimensions,
             scalar_params=tuple(sorted(scalar_params)),
             array_params=tuple(sorted(array_params)),
+            observers=self.observers,
         )
 
+        self._buffs = self._form_and_verify_observers()
+        
     def run_ionic_kernel(self):
         """
         Executes the ionic kernel for the Aliev-Panfilov model.
         """
-        self._kernel(self.u_new, self.cardiac_tissue.myo_indexes, self.dt, 
-                        self.u, self.v, self.par_a, self.par_k, self.par_mu1, self.par_mu2, self.par_eps)
+        self._kernel(self.u_new, self.cardiac_tissue.myo_indexes, self.dt, self.step,
+                        self.u, self.v, self.par_a, self.par_k, self.par_mu1, self.par_mu2, self.par_eps,
+                        *self._buffs)
 
     def select_stencil(self, cardiac_tissue):
         """

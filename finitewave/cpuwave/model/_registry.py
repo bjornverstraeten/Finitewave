@@ -1,19 +1,47 @@
-# finitewave/models/_registry.py
+from functools import lru_cache
 from importlib.metadata import entry_points
+from numba import njit
 
 REQS = ("get_variables", "get_parameters")
 
+
+@lru_cache(maxsize=1)
 def discover() -> dict:
     eps = entry_points(group="finitewave.models")
     return {ep.name: ep for ep in eps}
 
+
 def load_ops(model_id: str):
     eps = discover()
     if model_id not in eps:
-        raise KeyError(f"Model '{model_id}' not found via entry point 'finitewave.models'.")
+        raise KeyError(f"Model '{model_id}' not found via entry point group 'finitewave.models'.")
     mod = eps[model_id].load()   # ops package
     ops = getattr(mod, "ops", mod)
     for name in REQS:
         if not hasattr(ops, name):
             raise ValueError(f"Model '{model_id}' missing '{name}' in ops.")
     return ops
+
+
+def wrap_calc(ops):
+    jitted = {}
+    for name in dir(ops):
+        if name.startswith(("calc_", "rhs_")):
+            fn = getattr(ops, name)
+            if callable(fn):
+                jitted[name] = njit(cache=True)(fn)
+    return jitted
+
+
+@lru_cache(maxsize=64)
+def get_ops_and_jit(model_id: str):
+    try:
+        ops = load_ops(model_id)
+    except KeyError as e:
+        raise ImportError(
+            f"Finitewave model '{model_id}' not found.\n"
+            f"Make sure the corresponding model package is installed "
+            f"and exposes entry points under 'finitewave.models'."
+        ) from e
+
+    return ops, wrap_calc(ops)

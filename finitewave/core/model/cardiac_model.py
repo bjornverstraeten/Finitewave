@@ -63,6 +63,9 @@ class CardiacModel(ABC):
         self.state_saver = None
         self.stencil = None
 
+        self.observers = []
+        self._buffs = [] # observer buffers
+
         self.diffusion_kernel = None
         self.ionic_kernel = None
 
@@ -237,3 +240,16 @@ class CardiacModel(ABC):
             A deep copy of the current CardiacModel instance.
         """
         return copy.deepcopy(self)
+    
+    def _form_and_verify_observers(self):
+        buffs = []
+        for obs in self.observers:
+            name = obs["name"] 
+            try:
+                buffs.append(getattr(self, name))
+            except AttributeError as e:
+                raise AttributeError(
+                    f"Observer buffer '{name}' not found on model. "
+                    f"Create it before initialize(), e.g.: model.{name} = np.zeros(...)."
+                ) from e
+        return buffs
