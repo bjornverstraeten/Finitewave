@@ -26,22 +26,21 @@ class BarkleyKernel(IonicKernelGenerator):
     def __init__(self):
         super().__init__()
         self.arrays = ["u", "v"]
-        self.scalars = ["a", "b", "eap"]
+        self.scalars = ["a", "b", "eps"]
 
     def generate_body(self) -> str:
         u_idx = self._indexing("u")
         v_idx = self._indexing("v")
-        v_set = self._indexing("v")
+        v_new = self._indexing("v")
         u_new = f"u_new{self._raw_indexing()}"
 
         return f"""\
         u_idx = {u_idx}
         v_idx = {v_idx}
 
-        v_new = v_idx + dt * calc_v(v_idx, u_idx)
-        {v_set} = v_new
+        {v_new} += dt * calc_dv(v_idx, u_idx)
 
-        {u_new} += dt * calc_rhs(u_idx, v_new, a, b, eap)
+        {u_new} += dt * calc_rhs(u_idx, v_idx, a, b, eps)
 """
 
 
@@ -59,7 +58,7 @@ class Barkley(CardiacModel):
 
         self.par_a = self.parameters["a"]
         self.par_b = self.parameters["b"]
-        self.par_eap = self.parameters["eap"]
+        self.par_eps = self.parameters["eps"]
 
         self.var_u = self.variables["u"]
         self.var_v = self.variables["v"]
@@ -77,7 +76,7 @@ class Barkley(CardiacModel):
 
         gen = BarkleyKernel()
         glb = {
-            "calc_v": jit_ops["calc_v"],
+            "calc_dv": jit_ops["calc_dv"],
             "calc_rhs": jit_ops["calc_rhs"],
         }
 
@@ -102,7 +101,7 @@ class Barkley(CardiacModel):
             self.v,
             self.par_a,
             self.par_b,
-            self.par_eap,
+            self.par_eps,
             *self._buffs,
         )
 

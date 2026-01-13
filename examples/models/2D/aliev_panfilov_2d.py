@@ -35,11 +35,11 @@ from finitewave.cpuwave.model.aliev_panfilov import AlievPanfilov
 # create a tissue:
 n = 100
 m = 5
-tissue = fw.CardiacTissue2D([n, m])
+tissue = fw.CardiacTissue([n, m])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, 5, 0, m))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 5, 0, m))
 
 # create model object and set up parameters:
 aliev_panfilov = AlievPanfilov()
@@ -51,7 +51,7 @@ aliev_panfilov.cardiac_tissue = tissue
 aliev_panfilov.stim_sequence = stim_sequence
 
 tracker_sequence = fw.TrackerSequence()
-action_pot_tracker = fw.ActionPotential2DTracker()
+action_pot_tracker = fw.ActionPotentialTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 # eather list or list of lists can be used
 action_pot_tracker.cell_ind = [[50, 3]]

@@ -1,5 +1,5 @@
 from .aliev_panfilov import AlievPanfilov
-# from .barkley import Barkley
+from .barkley import Barkley
 # from .mitchell_schaeffer import MitchellSchaeffer
 # from .fenton_karma import FentonKarma
 # from .bueno_orovio import BuenoOrovio

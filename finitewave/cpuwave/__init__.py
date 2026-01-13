@@ -1,11 +1,26 @@
-
-from .model import (
+from finitewave.cpuwave.fibrosis import DiffusePattern, StructuralPattern
+from finitewave.cpuwave.model import (
     AlievPanfilov,
-    # Barkley,
+    Barkley,
     # MitchellSchaeffer,
     # FentonKarma,
     # BuenoOrovio,
     # LuoRudy91,
     # TP06,
-    # Courtemanche
+    # Courtemanche,
 )
+from finitewave.cpuwave.stencil import (
+    AsymmetricStencil2D,
+    IsotropicStencil2D,
+    AsymmetricStencil3D,
+    IsotropicStencil3D
+)
+from finitewave.cpuwave.stimulation import (
+    StimCurrentCoord,
+    StimVoltageCoord,
+    StimCurrentMatrix,
+    StimVoltageMatrix,
+    StimCurrentArea,
+)
+from .tracker import *
+

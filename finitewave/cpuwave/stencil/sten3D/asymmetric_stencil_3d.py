@@ -1,7 +1,7 @@
 import numpy as np
 from numba import njit, prange
 
-from finitewave.cpuwave2D.stencil.asymmetric_stencil_2d import (
+from finitewave.cpuwave.stencil.sten2D.asymmetric_stencil_2d import (
     AsymmetricStencil2D,
     major_component,
     minor_component

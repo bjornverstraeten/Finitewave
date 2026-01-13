@@ -37,15 +37,18 @@ class AlievPanfilovKernel(IonicKernelGenerator):
         self.scalars = ["a", "k", "mu1", "mu2", "eps"]
 
     def generate_body(self) -> str:
+        u_idx = self._indexing("u")
+        v_idx = self._indexing("v")
+        v_new = self._indexing("v")
+        
+        u_new = f"u_new{self._raw_indexing()}"
         return f"""\
-        u_idx = u[i, j]
-        v_idx = v[i, j]
+        u_idx = {u_idx}
+        v_idx = {v_idx}
 
-        dv  = calc_dv(v_idx, u_idx, a, k, eps, mu1, mu2)
-        rhs = calc_rhs(u_idx, v_idx, a, k)
+        {v_new} += dt * calc_dv(v_idx, u_idx, a, k, eps, mu1, mu2)
 
-        v[i, j] += dt * dv
-        u_new[i, j] += dt * rhs
+        {u_new} += dt * calc_rhs(u_idx, v_idx, a, k)
 """
 
 

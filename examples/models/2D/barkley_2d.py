@@ -34,14 +34,14 @@ import finitewave as fw
 # create a tissue:
 n = 100
 m = 5
-tissue = fw.CardiacTissue2D([n, m])
+tissue = fw.CardiacTissue([n, m])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, 5, 0, m))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 5, 0, m))
 
 # create model object and set up parameters:
-barkley = fw.Barkley2D()
+barkley = fw.Barkley()
 barkley.dt = 0.01
 barkley.dr = 0.25
 barkley.t_max = 10
@@ -51,7 +51,7 @@ barkley.stim_sequence = stim_sequence
 
 tracker_sequence = fw.TrackerSequence()
 # add the variable tracker:
-multivariable_tracker = fw.MultiVariable2DTracker()
+multivariable_tracker = fw.VariablesTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 multivariable_tracker.cell_ind = [50, 3]
 multivariable_tracker.var_list = ["u", "v"]

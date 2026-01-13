@@ -4,7 +4,7 @@ import numpy as np
 from finitewave.core.tracker.tracker import Tracker
 
 
-class MultiVariableTracker(Tracker):
+class VariablesTracker(Tracker):
     """
     A class to track multiple variables at a specific cell in a cardiac
     tissue model simulation.

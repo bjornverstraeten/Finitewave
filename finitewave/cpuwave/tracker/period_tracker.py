@@ -2,12 +2,12 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import json
-from .local_activation_time_2d_tracker import LocalActivationTime2DTracker
+from .local_activation_time_tracker import LocalActivationTimeTracker
 
 
-class Period2DTracker(LocalActivationTime2DTracker):
+class PeriodTracker(LocalActivationTimeTracker):
     """
-    A class to track activation periods of cells in a 2D cardiac tissue model
+    A class to track activation periods of cells in a cardiac tissue model
     using detectors.
 
     Attributes

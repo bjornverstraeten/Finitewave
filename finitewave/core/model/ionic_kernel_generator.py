@@ -1,6 +1,7 @@
 import re
 import warnings
 
+
 class IonicKernelGenerator:    
     """
     Base generator for model ionic kernels.
@@ -29,7 +30,7 @@ class IonicKernelGenerator:
             if self.dimensions == 2:
                 return f"{name}[i, j]"
             elif self.dimensions == 3:
-                return f"{name}[i, j, k]"
+                return f"{name}[i, j, k_]"
             else:
                 raise ValueError("Unsupported number of dimensions")
         else:
@@ -39,7 +40,7 @@ class IonicKernelGenerator:
         if self.dimensions == 2:
             return "[i, j]"
         elif self.dimensions == 3:
-            return "[i, j, k]"
+            return "[i, j, k_]"
         else:
             raise ValueError("Unsupported number of dimensions")
         
@@ -124,9 +125,7 @@ class IonicKernelGenerator:
 
     def kernel_base_args(self) -> list[str]:
         # common arguments: output, indexes, dt, (optional step)
-        base = ["u_new", "indexes", "dt"]
-        if self.include_step:
-            base.append("step")
+        base = ["u_new", "indexes", "dt", "step"]
         # then arrays + scalars
         base.extend(self.arrays)
         base.extend(self.scalars)
@@ -143,18 +142,17 @@ class IonicKernelGenerator:
         ii = indexes[idx]
         i = ii // n_j
         j = ii % n_j
-"""
-        # 3D placeholder; you can override in subclasses
-        return """\
+        """
+        elif self.dimensions == 3:
+            return """\
     n_k = u_new.shape[2]
     n_j = u_new.shape[1]
     for idx in prange(indexes.shape[0]):
         ii = indexes[idx]
         i = ii // (n_j * n_k)
-        rem = ii % (n_j * n_k)
-        j = rem // n_k
-        k = rem % n_k
-"""
+        j = (ii % (n_j*n_k))//n_k
+        k_ = (ii % (n_j*n_k)) % n_k
+        """
 
     def generate_body(self) -> str:
         """
@@ -170,8 +168,6 @@ class IonicKernelGenerator:
         obs = self.generate_observers()
 
         src = f"""
-from numba import njit, prange
-
 @njit(parallel=True, fastmath=True)
 def {self.kernel_func_name()}({args}):
 {loop}

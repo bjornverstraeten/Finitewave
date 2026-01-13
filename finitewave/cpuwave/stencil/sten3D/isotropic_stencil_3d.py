@@ -1,7 +1,7 @@
 import numpy as np
 from numba import njit, prange
 
-from finitewave.cpuwave2D.stencil.isotropic_stencil_2d import (
+from finitewave.cpuwave.stencil.sten2D.isotropic_stencil_2d import (
     compute_component,
     IsotropicStencil2D
 )

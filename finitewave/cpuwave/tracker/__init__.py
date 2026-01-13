@@ -26,8 +26,8 @@ from .activation_time_tracker import ActivationTimeTracker
 from .animation_tracker import AnimationTracker
 from .ecg_tracker import ECGTracker
 from .local_activation_time_tracker import LocalActivationTimeTracker
-from .variables_tracker import MultiVariableTracker
-from .period_tracker import Period2DTracker
+from .variables_tracker import VariablesTracker
+from .period_tracker import PeriodTracker
 # from .period_animation_tracker import PeriodAnimationTracker
 from .spiral_wave_core_tracker import SpiralWaveCoreTracker
 
