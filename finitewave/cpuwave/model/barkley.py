@@ -25,56 +25,102 @@ except KeyError as e:
 class BarkleyKernel(IonicKernelGenerator):
     def __init__(self):
         super().__init__()
-        self.arrays = ["u", "v"]
-        self.scalars = ["a", "b", "eps"]
+        self.args_order = [
+            "u", "v", "a", "b", "eps"
+        ]
 
     def generate_body(self) -> str:
-        u_idx = self._indexing("u")
-        v_idx = self._indexing("v")
-        v_new = self._indexing("v")
+        model_dict = {var: self._indexing(var) for var in (self.arrays + self.scalars)}
         u_new = f"u_new{self._raw_indexing()}"
 
         return f"""\
-        u_idx = {u_idx}
-        v_idx = {v_idx}
+        {model_dict['v']} += dt * calc_dv({model_dict['v']}, {model_dict['u']})
 
-        {v_new} += dt * calc_dv(v_idx, u_idx)
-
-        {u_new} += dt * calc_rhs(u_idx, v_idx, a, b, eps)
+        {u_new} += dt * calc_rhs({model_dict['u']}, {model_dict['v']}, {model_dict['a']}, 
+            {model_dict['b']}, {model_dict['eps']})
 """
 
 
 class Barkley(CardiacModel):
+    """
+    Two-dimensional implementation of the Barkley model for excitable media.
+
+    The Barkley model is a simplified two-variable reaction–diffusion system
+    originally developed to study wave propagation in excitable media. While it is 
+    not biophysically detailed, it captures essential qualitative features of 
+    cardiac-like excitation dynamics such as spiral waves, wave break, and reentry.
+
+    This implementation is included for benchmarking, educational purposes, 
+    and comparison against more detailed cardiac models.
+
+    Attributes
+    ----------
+    u : np.ndarray
+        Excitation variable (analogous to membrane potential).
+    v : np.ndarray
+        Recovery variable controlling excitability.
+    D_model : float
+        Diffusion coefficient for excitation variable.
+    state_vars : list of str
+        Names of variables saved during simulation.
+    npfloat : str
+        Floating-point precision (default: 'float64').
+
+    Model Parameters
+    ----------------
+    a : float
+        Threshold-like parameter controlling excitability.
+    b : float
+        Recovery time scale.
+    eap : float
+        Controls sharpness of the activation term (nonlinear gain).
+
+    Paper
+    -----
+    Barkley, D. (1991).
+    A model for fast computer simulation of waves in excitable media.
+    Physica D: Nonlinear Phenomena, 61-70.
+    https://doi.org/10.1016/0167-2789(86)90198-1.
+
+    """
     def __init__(self):
         super().__init__()
-        self.v = np.ndarray
-
         self.D_model = 1.0
         self.state_vars = ["u", "v"]
         self.npfloat = "float64"
 
-        self.parameters = ops.get_parameters()
-        self.variables = ops.get_variables()
+        # declare arrays for clarity
+        self.v = np.ndarray
 
-        self.par_a = self.parameters["a"]
-        self.par_b = self.parameters["b"]
-        self.par_eps = self.parameters["eps"]
+        # parameters + variables from ops
+        self.default_parameters = ops.get_parameters()
+        self.default_variables = ops.get_variables()
 
-        self.var_u = self.variables["u"]
-        self.var_v = self.variables["v"]
+        # set parameters
+        for name, value in self.default_parameters.items():
+            setattr(self, name, value)
+
+        # expose initial conditions as init_*
+        for name, value in self.default_variables.items():
+            setattr(self, f"init_{name}", value)
 
     def initialize(self):
+        """
+        Initializes the model for simulation.
+        """
         super().initialize()
 
-        self.u = self.var_u * np.ones_like(self.u, dtype=self.npfloat)
-        self.v = self.var_v * np.ones_like(self.u, dtype=self.npfloat)
-
-        scalar_params, array_params = [], []
-        for par_name in self.parameters.keys():
-            val = getattr(self, f"par_{par_name}")
-            (scalar_params if np.isscalar(val) else array_params).append(par_name)
+        self.u = self.init_u * np.ones_like(self.u, dtype=self.npfloat)
+        self.v = self.init_v * np.ones_like(self.u, dtype=self.npfloat)
 
         gen = BarkleyKernel()
+        for name in self.default_variables.keys():
+            gen.arrays.append(name)
+        for name in self.default_parameters.keys():
+            if np.isscalar(getattr(self, name)):
+                gen.scalars.append(name)
+            elif isinstance(getattr(self, name), np.ndarray):
+                gen.arrays.append(name)
         glb = {
             "calc_dv": jit_ops["calc_dv"],
             "calc_rhs": jit_ops["calc_rhs"],
@@ -84,8 +130,6 @@ class Barkley(CardiacModel):
             gen=gen,
             glb=glb,
             dimensions=self.cardiac_tissue.dimensions,
-            scalar_params=tuple(sorted(scalar_params)),
-            array_params=tuple(sorted(array_params)),
             observers=self.observers,
         )
 
@@ -99,9 +143,9 @@ class Barkley(CardiacModel):
             self.step,
             self.u,
             self.v,
-            self.par_a,
-            self.par_b,
-            self.par_eps,
+            self.a,
+            self.b,
+            self.eps,
             *self._buffs,
         )
 

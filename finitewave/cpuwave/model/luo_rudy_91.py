@@ -127,7 +127,7 @@ class LuoRudy91(CardiacModel):
         self.default_parameters = ops.get_parameters()
         self.default_variables = ops.get_variables()
 
-        # expose parameters as par_*
+        # set parameters
         for name, value in self.default_parameters.items():
             setattr(self, name, value)
         # remove E_Na, E_K1 from parameters as they are computed internally
@@ -139,6 +139,9 @@ class LuoRudy91(CardiacModel):
             setattr(self, f"init_{name}", value)
 
     def initialize(self):
+        """
+        Initializes the model for simulation.
+        """
         super().initialize()
 
         self.u   = self.init_u   * np.ones_like(self.u, dtype=self.npfloat)
