@@ -5,7 +5,7 @@ from finitewave.cpuwave.model import (
     # MitchellSchaeffer,
     # FentonKarma,
     # BuenoOrovio,
-    # LuoRudy91,
+    LuoRudy91,
     # TP06,
     # Courtemanche,
 )

@@ -35,24 +35,30 @@ n = 100
 m = 5
 k = 3
 # create mesh
-tissue = fw.CardiacTissue3D((n, m, k))
+tissue = fw.CardiacTissue((n, m, k))
 
 # set up stimulation parameters
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord3D(0, 1, 0, 5, 0, m, 0, k))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 5, 0, m, 0, k))
 
 # create model object and set up parameters
-luo_rudy = fw.LuoRudy913D()
+luo_rudy = fw.LuoRudy91()
 luo_rudy.dt = 0.01
 luo_rudy.dr = 0.25
 luo_rudy.t_max = 500
+
+luo_rudy.ik_obs = [0.0]  # np.zeros(int(luo_rudy.t_max/luo_rudy.dr), dtype=luo_rudy.npfloat)
+# luo_rudy.observers.append ({
+#     "name": "ik_obs",
+#     "expr": "if i_ == 5 and j_ == 2 and k_ == 1 and step % 100 == 0: ik_obs.append(ik)",  # example observer to track IK current
+# })
 
 # add the tissue and the stim parameters to the model object
 luo_rudy.cardiac_tissue = tissue
 luo_rudy.stim_sequence = stim_sequence
 
 tracker_sequence = fw.TrackerSequence()
-action_pot_tracker = fw.ActionPotential3DTracker()
+action_pot_tracker = fw.ActionPotentialTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 # eather list or list of lists can be used
 action_pot_tracker.cell_ind = [[50, 3, 1]]
@@ -71,5 +77,16 @@ plt.legend(title='Luo-Rudy 1991')
 plt.xlabel('Time (ms)')
 plt.ylabel('Voltage (mV)')
 plt.title('Action Potential')
+plt.grid()
+plt.show()
+
+# plot IK current
+plt.figure()
+time_ik = np.arange(len(luo_rudy.ik_obs)) * luo_rudy.dt
+plt.plot(time_ik, luo_rudy.ik_obs, label="IK Current at cell (5,2,1)")
+plt.legend(title='Luo-Rudy 1991')
+plt.xlabel('Time (ms)')
+plt.ylabel('IK Current (uA/cm^2)')
+plt.title('IK Current Over Time')
 plt.grid()
 plt.show()

@@ -18,32 +18,28 @@ class IonicKernelGenerator:
     """
 
     def __init__(self):
-        self.arrays = ["u"]
+        self.arrays = []
         self.scalars = []
+        self.args_order = [] # does not include u_new, indexes, dt, step and observers
         self.observers = []
         self.dimensions = 2
 
         self.names = ["u"]
+        self.param_fields = set()
 
     def _indexing(self, name):
         if name in self.arrays:
-            if self.dimensions == 2:
-                return f"{name}[i, j]"
-            elif self.dimensions == 3:
-                return f"{name}[i, j, k_]"
-            else:
-                raise ValueError("Unsupported number of dimensions")
-        else:
-            return name
+            return f"{name}{self._raw_indexing()}"
+        return name
         
     def _raw_indexing(self):
         if self.dimensions == 2:
-            return "[i, j]"
+            return "[i_, j_]"
         elif self.dimensions == 3:
-            return "[i, j, k_]"
+            return "[i_, j_, k_]"
         else:
             raise ValueError("Unsupported number of dimensions")
-        
+
     def _normalize_observers(self):
         ident = re.compile(r"^[A-Za-z_]\w*$")
 
@@ -74,6 +70,9 @@ class IonicKernelGenerator:
                 raise ValueError(
                     f"Observer #{idx}: invalid name '{name}'. Must be a valid Python identifier."
                 )
+            
+            if name in set(self.kernel_base_args()):
+                raise ValueError(f"Observer name '{name}' collides with kernel arg name.")
 
             if name in seen:
                 raise ValueError(f"Duplicate observer name '{name}'.")
@@ -83,7 +82,6 @@ class IonicKernelGenerator:
                 raise ValueError(f"Observer '{name}': 'expr' must be a non-empty string.")
             expr = expr.strip()
 
-            # warnings (cheap heuristics)
             if "append(" in expr or ".append(" in expr:
                 warnings.warn(
                     f"Observer '{name}': 'append' in expr is unsafe in numba-parallel kernels. "
@@ -116,23 +114,18 @@ class IonicKernelGenerator:
 
         return args, "\n        ".join(lines) # 8 spaces for indentation
 
-    def generate_observers(self) -> str:
-        _, code = self._normalize_observers()
-        return code
+    def generate_observers(self) -> tuple:
+        return self._normalize_observers()
 
     def kernel_func_name(self) -> str:
         return "ionic_kernel"
 
     def kernel_base_args(self) -> list[str]:
-        # common arguments: output, indexes, dt, (optional step)
-        base = ["u_new", "indexes", "dt", "step"]
-        # then arrays + scalars
-        base.extend(self.arrays)
-        base.extend(self.scalars)
-        # then observers
-        obs_args, _ = self._normalize_observers()
-        base.extend(obs_args)
-        return base
+        # common arguments: output, indexes, dt, step
+        args = ["u_new", "indexes", "dt", "step"]
+        args.extend(self.args_order)
+
+        return args
 
     def generate_loop_header(self) -> str:
         if self.dimensions == 2:
@@ -140,8 +133,8 @@ class IonicKernelGenerator:
     n_j = u_new.shape[1]
     for idx in prange(indexes.shape[0]):
         ii = indexes[idx]
-        i = ii // n_j
-        j = ii % n_j
+        i_ = ii // n_j
+        j_ = ii % n_j
         """
         elif self.dimensions == 3:
             return """\
@@ -149,8 +142,8 @@ class IonicKernelGenerator:
     n_j = u_new.shape[1]
     for idx in prange(indexes.shape[0]):
         ii = indexes[idx]
-        i = ii // (n_j * n_k)
-        j = (ii % (n_j*n_k))//n_k
+        i_ = ii // (n_j * n_k)
+        j_ = (ii % (n_j*n_k))//n_k
         k_ = (ii % (n_j*n_k)) % n_k
         """
 
@@ -164,12 +157,18 @@ class IonicKernelGenerator:
     def generate_cpu_numba(self) -> str:
         args = ", ".join(self.kernel_base_args())
         loop = self.generate_loop_header()
+
+        # double check required body args
+        missing = set(self.args_order)  - set(self.arrays) - set(self.scalars)
+        if missing:
+            raise ValueError(f"Kernel args missing: {sorted(missing)}")
         body = self.generate_body()
-        obs = self.generate_observers()
+        
+        obs_args, obs = self.generate_observers()
 
         src = f"""
 @njit(parallel=True, fastmath=True)
-def {self.kernel_func_name()}({args}):
+def {self.kernel_func_name()}({args + (', ' + ', '.join(obs_args) if obs_args else '')}):
 {loop}
 {body}
         {obs}
