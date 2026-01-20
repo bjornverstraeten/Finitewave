@@ -39,7 +39,7 @@ tissue = fw.CardiacTissue((n, m))
 
 # set up stimulation parameters
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 6, 0, m))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 5, 0, m))
 
 # create model object and set up parameters
 tp06 = fw.TenTusscherPanfilov2006()

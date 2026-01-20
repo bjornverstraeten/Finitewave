@@ -54,6 +54,10 @@ class TenTusscherPanfilov2006Kernel(IonicKernelGenerator):
         Eca = 0.5 * {model['RTONF']} * np.log({model['cao']} / {model['cai']})
 
         # --- Currents + gating updates ---
+        {model['m']} = calc_gating_m({model['m']}, u_loc, dt)
+        {model['h']}, h_inf = calc_gating_h({model['h']}, u_loc, dt)
+        {model['j']} = calc_gating_j({model['j']}, h_inf, u_loc, dt)
+
         ina, {model['m']}, {model['h']}, {model['j']} = calc_ina(
             u_loc, {model['m']}, {model['h']}, {model['j']},
             {model['gna']}, Ena
@@ -214,6 +218,9 @@ class TenTusscherPanfilov2006(CardiacModel):
         glb = {
             "np": np,
             # currents/gates
+            "calc_gating_m": jit_ops["calc_gating_m"],
+            "calc_gating_h": jit_ops["calc_gating_h"],
+            "calc_gating_j": jit_ops["calc_gating_j"],
             "calc_ina":  jit_ops["calc_ina"],
             "calc_ical": jit_ops["calc_ical"],
             "calc_ito":  jit_ops["calc_ito"],
