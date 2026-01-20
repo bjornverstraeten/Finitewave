@@ -4,5 +4,5 @@ from .barkley import Barkley
 # from .fenton_karma import FentonKarma
 # from .bueno_orovio import BuenoOrovio
 from .luo_rudy_91 import LuoRudy91
-# from .tp06 import TP06
+from .ten_tusscher_panfilov_2006 import TenTusscherPanfilov2006
 # from .courtemanche import Courtemanche

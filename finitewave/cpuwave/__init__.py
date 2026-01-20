@@ -6,7 +6,7 @@ from finitewave.cpuwave.model import (
     # FentonKarma,
     # BuenoOrovio,
     LuoRudy91,
-    # TP06,
+    TenTusscherPanfilov2006,
     # Courtemanche,
 )
 from finitewave.cpuwave.stencil import (

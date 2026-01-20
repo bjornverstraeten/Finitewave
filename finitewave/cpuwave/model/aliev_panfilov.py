@@ -121,7 +121,7 @@ class AlievPanfilov(CardiacModel):
         self.state_pars = [p for p in ops.get_parameters().keys()]
         self.npfloat    = 'float64'
 
-        # declare arrays for clarity
+        # declare arrays
         self.v = np.ndarray
 
         # parameters + variables from ops

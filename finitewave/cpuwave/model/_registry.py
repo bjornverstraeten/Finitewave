@@ -24,13 +24,26 @@ def load_ops(model_id: str):
 
 
 def wrap_calc(ops):
-    jitted = {}
+    py_funcs = {}
     for name in dir(ops):
         if name.startswith(("calc_", "rhs_")):
             fn = getattr(ops, name)
             if callable(fn):
-                jitted[name] = njit(cache=True)(fn)
-    return jitted
+                py_funcs[name] = fn
+
+    jitted = {name: njit(cache=True)(fn) for name, fn in py_funcs.items()}
+
+    for name, fn in py_funcs.items():
+        g = getattr(fn, "__globals__", None)
+        if not g:
+            continue
+        for dep_name, dep_jit in jitted.items():
+            if dep_name in g:
+                g[dep_name] = dep_jit
+
+    jitted2 = {name: njit(cache=True)(fn) for name, fn in py_funcs.items()}
+
+    return jitted2
 
 
 @lru_cache(maxsize=64)

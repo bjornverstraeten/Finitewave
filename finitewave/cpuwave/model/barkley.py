@@ -89,7 +89,7 @@ class Barkley(CardiacModel):
         self.state_vars = ["u", "v"]
         self.npfloat = "float64"
 
-        # declare arrays for clarity
+        # declare arrays
         self.v = np.ndarray
 
         # parameters + variables from ops

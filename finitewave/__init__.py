@@ -43,7 +43,7 @@ from finitewave.cpuwave import (
     # FentonKarma,
     # BuenoOrovio,
     LuoRudy91,
-    # TP06,
+    TenTusscherPanfilov2006,
     # Courtemanche,
     AsymmetricStencil2D,
     # SymmetricStencil2D,
