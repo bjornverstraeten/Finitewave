@@ -113,6 +113,8 @@ class Barkley(CardiacModel):
         for name in self.default_variables.keys():
             init_val = getattr(self, f"init_{name}")
             setattr(self, name, init_val * np.ones_like(self.u, dtype=self.npfloat))
+            if name == 'u':
+                self.u_new = self.u.copy()
 
         # validate parameter fields shapes if they are arrays
         tissue_shape = self.cardiac_tissue.mesh.shape
@@ -125,13 +127,23 @@ class Barkley(CardiacModel):
                     )
 
         gen = BarkleyKernel()
-        for name in self.default_variables.keys():
+        self._kernel_args_order = gen.args_order[:]
+
+        # args_order: state vars first, then all parameters (stable order for call site)
+        param_names = list(self.default_parameters.keys())
+        var_names = list(self.default_variables.keys())
+
+        # Tell generator which names are arrays vs scalars (for indexing decisions)
+        for name in var_names:
             gen.arrays.append(name)
-        for name in self.default_parameters.keys():
-            if np.isscalar(getattr(self, name)):
+
+        for name in param_names:
+            par = getattr(self, name)
+            if np.isscalar(par):
                 gen.scalars.append(name)
-            elif isinstance(getattr(self, name), np.ndarray):
+            elif isinstance(par, np.ndarray):
                 gen.arrays.append(name)
+    
         glb = {
             "calc_dv": jit_ops["calc_dv"],
             "calc_rhs": jit_ops["calc_rhs"],

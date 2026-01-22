@@ -55,11 +55,11 @@ tracker_sequence = fw.TrackerSequence()
 action_pot_tracker = fw.ActionPotentialTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 # eather list or list of lists can be used
-action_pot_tracker.cell_ind = [[0, 3]]
+action_pot_tracker.cell_ind = [[50, 3]]
 action_pot_tracker.step = 1
 tracker_sequence.add_tracker(action_pot_tracker)
 tp06.tracker_sequence = tracker_sequence
-
+# print (tissue.mesh)
 # run the model:
 tp06.run()
 

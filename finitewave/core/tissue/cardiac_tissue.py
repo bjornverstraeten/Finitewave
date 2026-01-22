@@ -75,10 +75,10 @@ class CardiacTissue(ABC):
         updates these edges in the mesh array.
         """
         if self.dimensions == 2:
-            self._mesh[0, :] = 0
-            self._mesh[:, 0] = 0
-            self._mesh[-1, :] = 0
-            self._mesh[:, -1] = 0
+            self.mesh[0, :] = 0
+            self.mesh[:, 0] = 0
+            self.mesh[-1, :] = 0
+            self.mesh[:, -1] = 0
         elif self.dimensions == 3:
             self.mesh[0, :, :] = 0
             self.mesh[:, 0, :] = 0

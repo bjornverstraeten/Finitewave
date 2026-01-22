@@ -147,6 +147,8 @@ class AlievPanfilov(CardiacModel):
         for name in self.default_variables.keys():
             init_val = getattr(self, f"init_{name}")
             setattr(self, name, init_val * np.ones_like(self.u, dtype=self.npfloat))
+            if name == 'u':
+                self.u_new = self.u.copy()
 
         # validate parameter fields shapes if they are arrays
         tissue_shape = self.cardiac_tissue.mesh.shape

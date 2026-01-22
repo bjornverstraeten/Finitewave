@@ -42,17 +42,17 @@ class LuoRudy91Kernel(IonicKernelGenerator):
         E_Na = ({model['R']}*{model['T']}/{model['F']}) * np.log({model['nao']}/{model['nai']})
         E_K1 = ({model['R']}*{model['T']}/{model['F']}) * np.log({model['ko']}/{model['ki']})
 
-        {model['m']} = {model['m']} + dt * calc_dm(u_loc, {model['m']})
-        {model['h']} = {model['h']} + dt * calc_dh(u_loc, {model['h']})
-        {model['j']} = {model['j']} + dt * calc_dj(u_loc, {model['j']})
+        {model['m']} += dt * calc_dm(u_loc, {model['m']})
+        {model['h']} += dt * calc_dh(u_loc, {model['h']})
+        {model['j']} += dt * calc_dj(u_loc, {model['j']})
 
-        {model['d']} = {model['d']} + dt * calc_dd(u_loc, {model['d']})
-        {model['f']} = {model['f']} + dt * calc_df(u_loc, {model['f']})
-        {model['x']} = {model['x']} + dt * calc_dx(u_loc, {model['x']})
+        {model['d']} += dt * calc_dd(u_loc, {model['d']})
+        {model['f']} += dt * calc_df(u_loc, {model['f']})
+        {model['x']} += dt * calc_dx(u_loc, {model['x']})
 
         ina = calc_ina(u_loc, {model['m']}, {model['h']}, {model['j']}, E_Na, {model['gna']})
         isi = calc_isk(u_loc, {model['d']}, {model['f']}, {model['cai']}, {model['gsi']})
-        {model['cai']} = {model['cai']} + dt * calc_dcai({model['cai']}, isi)
+        {model['cai']} += dt * calc_dcai({model['cai']}, isi)
 
         ik  = calc_ik(u_loc, {model['x']}, {model['ko']}, {model['ki']}, {model['nao']}, {model['nai']}, 
             {model['PR_NaK']}, {model['R']}, {model['T']}, {model['F']}, {model['gk']})
@@ -137,6 +137,8 @@ class LuoRudy91(CardiacModel):
         for name in self.default_variables.keys():
             init_val = getattr(self, f"init_{name}")
             setattr(self, name, init_val * np.ones_like(self.u, dtype=self.npfloat))
+            if name == 'u':
+                self.u_new = self.u.copy()
 
         # validate parameter fields shapes if they are arrays
         tissue_shape = self.cardiac_tissue.mesh.shape
@@ -149,16 +151,25 @@ class LuoRudy91(CardiacModel):
                     )
 
         gen = LuoRudy91Kernel()
-        for name in self.default_variables.keys():
+        self._kernel_args_order = gen.args_order[:]
+
+        # args_order: state vars first, then all parameters (stable order for call site)
+        param_names = list(self.default_parameters.keys())
+        var_names = list(self.default_variables.keys())
+
+        # Tell generator which names are arrays vs scalars (for indexing decisions)
+        for name in var_names:
             gen.arrays.append(name)
-        for name in self.default_parameters.keys():
+
+        for name in param_names:
             if name in ("E_Na", "E_K1"): # computed internally
                 continue
-            if np.isscalar(getattr(self, name)):
+            par = getattr(self, name)
+            if np.isscalar(par):
                 gen.scalars.append(name)
-            elif isinstance(getattr(self, name), np.ndarray):
+            elif isinstance(par, np.ndarray):
                 gen.arrays.append(name)
-
+    
         glb = {
             "np": np,
             "calc_dm": jit_ops["calc_dm"],

@@ -144,13 +144,15 @@ class TenTusscherPanfilov2006Kernel(IonicKernelGenerator):
         )
 
         # --- Voltage ---
-        {u_new} = u_loc + dt * (-calc_rhs(
+        {u_new} += dt * (-calc_rhs(
             ikr, iks, ik1, ito,
             ina, ibna,
             ical, ibca,
             inak, inaca,
             ipca, ipk
         ))
+
+        # if i_ == 1 and j_ == 1: print(u_new[i_, j_])
 """
 
 
@@ -186,6 +188,8 @@ class TenTusscherPanfilov2006(CardiacModel):
         for name in self.default_variables.keys():
             init_val = getattr(self, f"init_{name}")
             setattr(self, name, init_val * np.ones_like(self.u, dtype=self.npfloat))
+            if name == 'u':
+                self.u_new = self.u.copy()
 
         # validate parameter fields shapes if they are arrays
         tissue_shape = self.cardiac_tissue.mesh.shape
