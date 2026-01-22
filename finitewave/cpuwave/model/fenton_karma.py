@@ -21,20 +21,21 @@ from finitewave.cpuwave.model._kernel_builder import build_kernel
 
 
 try:
-    ops = load_ops("aliev_panfilov")
+    ops = load_ops("fenton_karma")
     jit_ops = wrap_calc(ops)
 except KeyError as e:
     raise ImportError(
-        "Aliev-Panfilov model ops not found. "
+        "Fenton-Karma model ops not found. "
         # "Install model package: pip install aliev-panfilov-finitewave-model"
     ) from e
 
 
-class AlievPanfilovKernel(IonicKernelGenerator):
+class FentonKarmaKernel(IonicKernelGenerator):
     def __init__(self):
         super().__init__()
         self.args_order = [
-            "u", "v", "a", "k", "mu1", "mu2", "eps"
+            "u", "v", "w", "tau_d", "tau_o", "tau_r", "tau_si", "tau_v_m", "tau_v_p",
+            "tau_w_m", "tau_w_p", "k", "u_c", "uc_si"
         ]
 
     def generate_body(self) -> str:
@@ -43,77 +44,89 @@ class AlievPanfilovKernel(IonicKernelGenerator):
         
         return f"""\
 
-        {model['v']} += dt * calc_dv({model['v']}, {model['u']}, 
-            {model['a']}, {model['k']}, {model['eps']}, {model['mu1']}, {model['mu2']})
+        {model['v']} += dt * calc_dv({model['v']} , {model['u']} , 
+                                          {model['u_c']} , {model['tau_v_m']} , {model['tau_v_p']} )
+        {model['w']}  += dt * calc_dw({model['w']} , {model['u']} , 
+                                          {model['u_c']} , {model['tau_w_m']} , {model['tau_w_p']})
+        
+        J_fi = calc_Jfi({model['u']}, {model['v']}, 
+                            {model['u_c']}, {model['tau_d']})
+        J_so = calc_Jso({model['u']}, {model['u_c']},
+                            {model['tau_o']}, {model['tau_r']})
+        J_si = calc_Jsi({model['u']}, {model['w']},
+                            {model['k']}, {model['uc_si']}, {model['tau_si']})
 
-        {u_new} += dt * calc_rhs({model['u']}, {model['v']}, {model['a']}, {model['k']})
+        {u_new} += dt * calc_rhs(J_fi, J_so, J_si)
+
 """
 
 
-class AlievPanfilov(CardiacModel):
+class FentonKarma(CardiacModel):
     """
-    Implementation of the Aliev–Panfilov model of cardiac excitation.
+    Two-dimensional implementation of the Fenton-Karma model of cardiac electrophysiology.
 
-    The Aliev–Panfilov model is a phenomenological two-variable model designed to
-    reproduce basic features of cardiac excitation, including wave propagation and
-    reentry, while remaining computationally efficient. It uses a single recovery
-    variable coupled with a cubic nonlinearity to simulate action potential dynamics
-    in excitable media.
+    The Fenton-Karma model is a minimal three-variable model designed to reproduce
+    essential features of human ventricular action potentials, including restitution, 
+    conduction velocity dynamics, and spiral wave behavior. It captures the interaction 
+    between fast depolarization, slow repolarization, and calcium-mediated effects 
+    through simplified phenomenological equations.
+
+    This implementation corresponds to the MLR-I parameter set described in the original paper
+    and supports 2D isotropic and anisotropic tissue simulations with diffusion.
 
     Attributes
     ----------
     u : np.ndarray
-        Transmembrane potential (dimensionless, normalized to [0,1]).
+        Transmembrane potential (normalized, dimensionless).
     v : np.ndarray
-        Recovery variable describing refractoriness.
+        Fast recovery variable, representing sodium channel inactivation.
+    w : np.ndarray
+        Slow recovery variable, representing calcium channel dynamics.
     D_model : float
-        Diffusion coefficient used for simulating spatial propagation.
+        Baseline diffusion coefficient used in the diffusion stencil.
     state_vars : list of str
-        Names of the state variables to be saved and restored.
+        Names of the state variables stored during the simulation.
     npfloat : str
-        Floating-point precision used in the simulation (default: 'float64').
+        Floating point precision (default is 'float64').
 
     Model Parameters
     ----------------
-    a : float
-        Excitability threshold parameter.
+    tau_r : float
+        Time constant for repolarization (outward current).
+    tau_o : float
+        Time constant for the open-state decay of fast sodium channels.
+    tau_d : float
+        Time constant for depolarization (fast inward current).
+    tau_si : float
+        Time constant for the slow inward (calcium-like) current.
+    tau_v_m : float
+        Time constant for inactivation gate v (membrane below threshold).
+    tau_v_p : float
+        Time constant for recovery gate v (above threshold).
+    tau_w_m : float
+        Time constant for recovery gate w (below threshold).
+    tau_w_p : float
+        Time constant for decay of w (above threshold).
     k : float
-        Strength of the nonlinear source term (governs spike shape).
-    eps : float
-        Baseline recovery rate.
-    mu1 : float
-        Recovery rate coefficient (scales v feedback).
-    mu2 : float
-        Recovery rate offset (modulates u-dependence of recovery).
-
+        Steepness parameter for the slow inward current.
+    u_c : float
+        Activation threshold for recovery dynamics.
+    uc_si : float
+        Activation threshold for the slow inward current.
+    
     Paper
     -----
-    Rubin R. Aliev, Alexander V. Panfilov,
-    A simple two-variable model of cardiac excitation,
-    Chaos, Solitons & Fractals,
-    Volume 7, Issue 3,
-    1996,
-    Pages 293-301,
-    ISSN 0960-0779,
-    https://doi.org/10.1016/0960-0779(95)00089-5.
-
-    Attributes
-    ----------
-    v : np.ndarray
-        Array for the recovery variable.
-    w : np.ndarray
-        Array for diffusion weights.
-    D_model : float
-        Model specific diffusion coefficient
-    state_vars : list
-        List of state variables to be saved and restored.
-    npfloat : str
-        Data type used for floating-point operations, default is 'float64'.
+    Fenton, F., & Karma, A. (1998).
+    Vortex dynamics in three-dimensional continuous myocardium 
+    with fiber rotation: Filament instability and fibrillation.
+    Chaos, 8(1), 20-47.
+    https://doi.org/10.1063/1.166311
+            
     """
 
     def __init__(self):
         """
-        Initializes the AlievPanfilov instance with default parameters.
+        Initializes the Fenton-Karma instance with default parameters.
         """
         super().__init__()
         self.D_model = 1.
@@ -160,7 +173,7 @@ class AlievPanfilov(CardiacModel):
                         f"param '{name}' shape {par.shape} != tissue shape {tissue_shape}"
                     )
 
-        gen = AlievPanfilovKernel()
+        gen = FentonKarmaKernel()
         self._kernel_args_order = gen.args_order[:]
 
         # args_order: state vars first, then all parameters (stable order for call site)
@@ -181,6 +194,10 @@ class AlievPanfilov(CardiacModel):
 
         glb = {
             "calc_dv": jit_ops["calc_dv"], 
+            "calc_dw": jit_ops["calc_dw"],
+            "calc_Jfi": jit_ops["calc_Jfi"],
+            "calc_Jso": jit_ops["calc_Jso"],
+            "calc_Jsi": jit_ops["calc_Jsi"],
             "calc_rhs": jit_ops["calc_rhs"]
         }
 
@@ -195,7 +212,7 @@ class AlievPanfilov(CardiacModel):
         
     def run_ionic_kernel(self):
         """
-        Executes the ionic kernel for the Aliev-Panfilov model.
+        Executes the ionic kernel for the Fenton-Karma model.
         """
         args = [getattr(self, name) for name in self._kernel_args_order]
         self._kernel(

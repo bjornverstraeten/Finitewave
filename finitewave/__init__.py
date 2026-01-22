@@ -40,7 +40,7 @@ from finitewave.cpuwave import (
     AlievPanfilov,
     Barkley,
     # MitchellSchaeffer,
-    # FentonKarma,
+    FentonKarma,
     # BuenoOrovio,
     LuoRudy91,
     TenTusscherPanfilov2006,

@@ -3,7 +3,7 @@ from finitewave.cpuwave.model import (
     AlievPanfilov,
     Barkley,
     # MitchellSchaeffer,
-    # FentonKarma,
+    FentonKarma,
     # BuenoOrovio,
     LuoRudy91,
     TenTusscherPanfilov2006,
