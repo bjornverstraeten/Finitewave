@@ -30,14 +30,14 @@ class BarkleyKernel(IonicKernelGenerator):
         ]
 
     def generate_body(self) -> str:
-        model_dict = {var: self._indexing(var) for var in (self.arrays + self.scalars)}
+        model = {var: self._indexing(var) for var in (self.arrays + self.scalars)}
         u_new = f"u_new{self._raw_indexing()}"
 
         return f"""\
-        {model_dict['v']} += dt * calc_dv({model_dict['v']}, {model_dict['u']})
+        {model['v']} += dt * calc_dv({model['v']}, {model['u']})
 
-        {u_new} += dt * calc_rhs({model_dict['u']}, {model_dict['v']}, {model_dict['a']}, 
-            {model_dict['b']}, {model_dict['eps']})
+        {u_new} += dt * calc_rhs({model['u']}, {model['v']}, {model['a']}, 
+            {model['b']}, {model['eps']})
 """
 
 
@@ -86,17 +86,15 @@ class Barkley(CardiacModel):
     def __init__(self):
         super().__init__()
         self.D_model = 1.0
-        self.state_vars = ["u", "v"]
         self.npfloat = "float64"
 
-        # declare arrays
-        self.v = np.ndarray
-
-        # parameters + variables from ops
         self.default_parameters = ops.get_parameters()
         self.default_variables = ops.get_variables()
 
-        # set parameters
+        self.state_vars = self.default_variables.keys()
+        self.state_pars = list(self.default_parameters.keys())
+
+        # expose parameters as direct attributes (scalar or array)
         for name, value in self.default_parameters.items():
             setattr(self, name, value)
 
@@ -104,14 +102,27 @@ class Barkley(CardiacModel):
         for name, value in self.default_variables.items():
             setattr(self, f"init_{name}", value)
 
+        # declare arrays (optional, for readability/debug)
+        for name in self.default_variables.keys():
+            setattr(self, name, np.ndarray)
+
     def initialize(self):
-        """
-        Initializes the model for simulation.
-        """
         super().initialize()
 
-        self.u = self.init_u * np.ones_like(self.u, dtype=self.npfloat)
-        self.v = self.init_v * np.ones_like(self.u, dtype=self.npfloat)
+        # allocate state arrays
+        for name in self.default_variables.keys():
+            init_val = getattr(self, f"init_{name}")
+            setattr(self, name, init_val * np.ones_like(self.u, dtype=self.npfloat))
+
+        # validate parameter fields shapes if they are arrays
+        tissue_shape = self.cardiac_tissue.mesh.shape
+        for name in self.default_parameters.keys():
+            par = getattr(self, name)
+            if isinstance(par, np.ndarray):
+                if par.shape != tissue_shape:
+                    raise ValueError(
+                        f"param '{name}' shape {par.shape} != tissue shape {tissue_shape}"
+                    )
 
         gen = BarkleyKernel()
         for name in self.default_variables.keys():
@@ -136,16 +147,13 @@ class Barkley(CardiacModel):
         self._buffs = self._form_and_verify_observers()
 
     def run_ionic_kernel(self):
+        args = [getattr(self, name) for name in self._kernel_args_order]
         self._kernel(
             self.u_new,
             self.cardiac_tissue.myo_indexes,
             self.dt,
             self.step,
-            self.u,
-            self.v,
-            self.a,
-            self.b,
-            self.eps,
+            *args,
             *self._buffs,
         )
 

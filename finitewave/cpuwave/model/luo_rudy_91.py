@@ -33,32 +33,32 @@ class LuoRudy91Kernel(IonicKernelGenerator):
         ]
 
     def generate_body(self) -> str:
-        model_dict = {var: self._indexing(var) for var in (self.arrays + self.scalars)}
+        model = {var: self._indexing(var) for var in (self.arrays + self.scalars)}
         u_new = f"u_new{self._raw_indexing()}"
 
         return f"""\
-        u_loc = {model_dict['u']}
+        u_loc = {model['u']}
 
-        E_Na = ({model_dict['R']}*{model_dict['T']}/{model_dict['F']}) * np.log({model_dict['nao']}/{model_dict['nai']})
-        E_K1 = ({model_dict['R']}*{model_dict['T']}/{model_dict['F']}) * np.log({model_dict['ko']}/{model_dict['ki']})
+        E_Na = ({model['R']}*{model['T']}/{model['F']}) * np.log({model['nao']}/{model['nai']})
+        E_K1 = ({model['R']}*{model['T']}/{model['F']}) * np.log({model['ko']}/{model['ki']})
 
-        {model_dict['m']} = {model_dict['m']} + dt * calc_dm(u_loc, {model_dict['m']})
-        {model_dict['h']} = {model_dict['h']} + dt * calc_dh(u_loc, {model_dict['h']})
-        {model_dict['j']} = {model_dict['j']} + dt * calc_dj(u_loc, {model_dict['j']})
+        {model['m']} = {model['m']} + dt * calc_dm(u_loc, {model['m']})
+        {model['h']} = {model['h']} + dt * calc_dh(u_loc, {model['h']})
+        {model['j']} = {model['j']} + dt * calc_dj(u_loc, {model['j']})
 
-        {model_dict['d']} = {model_dict['d']} + dt * calc_dd(u_loc, {model_dict['d']})
-        {model_dict['f']} = {model_dict['f']} + dt * calc_df(u_loc, {model_dict['f']})
-        {model_dict['x']} = {model_dict['x']} + dt * calc_dx(u_loc, {model_dict['x']})
+        {model['d']} = {model['d']} + dt * calc_dd(u_loc, {model['d']})
+        {model['f']} = {model['f']} + dt * calc_df(u_loc, {model['f']})
+        {model['x']} = {model['x']} + dt * calc_dx(u_loc, {model['x']})
 
-        ina = calc_ina(u_loc, {model_dict['m']}, {model_dict['h']}, {model_dict['j']}, E_Na, {model_dict['gna']})
-        isi = calc_isk(u_loc, {model_dict['d']}, {model_dict['f']}, {model_dict['cai']}, {model_dict['gsi']})
-        {model_dict['cai']} = {model_dict['cai']} + dt * calc_dcai({model_dict['cai']}, isi)
+        ina = calc_ina(u_loc, {model['m']}, {model['h']}, {model['j']}, E_Na, {model['gna']})
+        isi = calc_isk(u_loc, {model['d']}, {model['f']}, {model['cai']}, {model['gsi']})
+        {model['cai']} = {model['cai']} + dt * calc_dcai({model['cai']}, isi)
 
-        ik  = calc_ik(u_loc, {model_dict['x']}, {model_dict['ko']}, {model_dict['ki']}, {model_dict['nao']}, {model_dict['nai']}, 
-            {model_dict['PR_NaK']}, {model_dict['R']}, {model_dict['T']}, {model_dict['F']}, {model_dict['gk']})
-        ik1 = calc_ik1(u_loc, {model_dict['ko']}, E_K1, {model_dict['gk1']})
-        ikp = calc_ikp(u_loc, E_K1, {model_dict['gkp']})
-        ib  = calc_ib(u_loc, {model_dict['gb']})
+        ik  = calc_ik(u_loc, {model['x']}, {model['ko']}, {model['ki']}, {model['nao']}, {model['nai']}, 
+            {model['PR_NaK']}, {model['R']}, {model['T']}, {model['F']}, {model['gk']})
+        ik1 = calc_ik1(u_loc, {model['ko']}, E_K1, {model['gk1']})
+        ikp = calc_ikp(u_loc, E_K1, {model['gkp']})
+        ib  = calc_ib(u_loc, {model['gb']})
 
         {u_new} += dt * calc_rhs(ina, isi, ik, ik1, ikp, ib)
     """
@@ -110,56 +110,43 @@ class LuoRudy91(CardiacModel):
         super().__init__()
 
         self.D_model = 0.1
-        self.state_vars = ops.get_variables().keys()
-        self.state_pars = [p for p in ops.get_parameters().keys()]
         self.npfloat = "float64"
 
-        # declare arrays
-        self.m = np.ndarray
-        self.h = np.ndarray
-        self.j = np.ndarray
-        self.d = np.ndarray
-        self.f = np.ndarray
-        self.x = np.ndarray
-        self.cai = np.ndarray
-
-        # parameters + variables from ops
         self.default_parameters = ops.get_parameters()
         self.default_variables = ops.get_variables()
 
-        # set parameters
+        self.state_vars = self.default_variables.keys()
+        self.state_pars = list(self.default_parameters.keys())
+
+        # expose parameters as direct attributes (scalar or array)
         for name, value in self.default_parameters.items():
             setattr(self, name, value)
-        # remove E_Na, E_K1 from parameters as they are computed internally
-        delattr(self, "E_Na")
-        delattr(self, "E_K1")
 
         # expose initial conditions as init_*
         for name, value in self.default_variables.items():
             setattr(self, f"init_{name}", value)
 
+        # declare arrays (optional, for readability/debug)
+        for name in self.default_variables.keys():
+            setattr(self, name, np.ndarray)
+
     def initialize(self):
-        """
-        Initializes the model for simulation.
-        """
         super().initialize()
 
-        self.u   = self.init_u   * np.ones_like(self.u, dtype=self.npfloat)
-        self.m   = self.init_m   * np.ones_like(self.u, dtype=self.npfloat)
-        self.h   = self.init_h   * np.ones_like(self.u, dtype=self.npfloat)
-        self.j   = self.init_j   * np.ones_like(self.u, dtype=self.npfloat)
-        self.d   = self.init_d   * np.ones_like(self.u, dtype=self.npfloat)
-        self.f   = self.init_f   * np.ones_like(self.u, dtype=self.npfloat)
-        self.x   = self.init_x   * np.ones_like(self.u, dtype=self.npfloat)
-        self.cai = self.init_cai * np.ones_like(self.u, dtype=self.npfloat)
+        # allocate state arrays
+        for name in self.default_variables.keys():
+            init_val = getattr(self, f"init_{name}")
+            setattr(self, name, init_val * np.ones_like(self.u, dtype=self.npfloat))
 
+        # validate parameter fields shapes if they are arrays
+        tissue_shape = self.cardiac_tissue.mesh.shape
         for name in self.default_parameters.keys():
-            if name in ("E_Na", "E_K1"):
-                continue
             par = getattr(self, name)
             if isinstance(par, np.ndarray):
-                if par.shape != self.cardiac_tissue.mesh.shape:
-                    raise ValueError(f"par_{name} shape {par.shape} != tissue shape {self.cardiac_tissue.mesh.shape}")
+                if par.shape != tissue_shape:
+                    raise ValueError(
+                        f"param '{name}' shape {par.shape} != tissue shape {tissue_shape}"
+                    )
 
         gen = LuoRudy91Kernel()
         for name in self.default_variables.keys():
@@ -199,16 +186,13 @@ class LuoRudy91(CardiacModel):
         self._buffs = self._form_and_verify_observers()
 
     def run_ionic_kernel(self):
+        args = [getattr(self, name) for name in self._kernel_args_order]
         self._kernel(
             self.u_new,
             self.cardiac_tissue.myo_indexes,
             self.dt,
             self.step,
-            self.u, self.m, self.h, self.j, self.d, self.f, self.x, self.cai,
-            self.gna, self.gsi, self.gk, self.gk1, self.gkp, self.gb,
-            self.ko, self.ki, self.nai, self.nao, self.cao,
-            self.R, self.T, self.F, self.PR_NaK,
-            # observers
+            *args,
             *self._buffs,
         )
 

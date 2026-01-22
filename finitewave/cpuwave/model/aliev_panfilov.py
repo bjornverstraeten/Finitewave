@@ -38,15 +38,15 @@ class AlievPanfilovKernel(IonicKernelGenerator):
         ]
 
     def generate_body(self) -> str:
-        model_dict = {var: self._indexing(var) for var in (self.arrays + self.scalars)}
+        model = {var: self._indexing(var) for var in (self.arrays + self.scalars)}
         u_new = f"u_new{self._raw_indexing()}"
         
         return f"""\
 
-        {model_dict['v']} += dt * calc_dv({model_dict['v']}, {model_dict['u']}, 
-            {model_dict['a']}, {model_dict['k']}, {model_dict['eps']}, {model_dict['mu1']}, {model_dict['mu2']})
+        {model['v']} += dt * calc_dv({model['v']}, {model['u']}, 
+            {model['a']}, {model['k']}, {model['eps']}, {model['mu1']}, {model['mu2']})
 
-        {u_new} += dt * calc_rhs({model_dict['u']}, {model_dict['v']}, {model_dict['a']}, {model_dict['k']})
+        {u_new} += dt * calc_rhs({model['u']}, {model['v']}, {model['a']}, {model['k']})
 """
 
 
@@ -117,18 +117,15 @@ class AlievPanfilov(CardiacModel):
         """
         super().__init__()
         self.D_model = 1.
-        self.state_vars = ops.get_variables().keys()
-        self.state_pars = [p for p in ops.get_parameters().keys()]
         self.npfloat    = 'float64'
 
-        # declare arrays
-        self.v = np.ndarray
-
-        # parameters + variables from ops
         self.default_parameters = ops.get_parameters()
         self.default_variables = ops.get_variables()
 
-        # set parameters
+        self.state_vars = self.default_variables.keys()
+        self.state_pars = list(self.default_parameters.keys())
+
+        # expose parameters as direct attributes (scalar or array)
         for name, value in self.default_parameters.items():
             setattr(self, name, value)
 
@@ -136,23 +133,49 @@ class AlievPanfilov(CardiacModel):
         for name, value in self.default_variables.items():
             setattr(self, f"init_{name}", value)
 
+        # declare arrays (optional, for readability/debug)
+        for name in self.default_variables.keys():
+            setattr(self, name, np.ndarray)
+
     def initialize(self):
         """
         Initializes the model for simulation.
         """
         super().initialize()
 
-        self.u = self.init_u * np.ones_like(self.u, dtype=self.npfloat)
-        self.v = self.init_v * np.ones_like(self.u, dtype=self.npfloat)
+        # allocate state arrays
+        for name in self.default_variables.keys():
+            init_val = getattr(self, f"init_{name}")
+            setattr(self, name, init_val * np.ones_like(self.u, dtype=self.npfloat))
+
+        # validate parameter fields shapes if they are arrays
+        tissue_shape = self.cardiac_tissue.mesh.shape
+        for name in self.default_parameters.keys():
+            par = getattr(self, name)
+            if isinstance(par, np.ndarray):
+                if par.shape != tissue_shape:
+                    raise ValueError(
+                        f"param '{name}' shape {par.shape} != tissue shape {tissue_shape}"
+                    )
 
         gen = AlievPanfilovKernel()
-        for name in self.default_variables.keys():
+        self._kernel_args_order = gen.args_order[:]
+
+        # args_order: state vars first, then all parameters (stable order for call site)
+        param_names = list(self.default_parameters.keys())
+        var_names = list(self.default_variables.keys())
+
+        # Tell generator which names are arrays vs scalars (for indexing decisions)
+        for name in var_names:
             gen.arrays.append(name)
-        for name in self.default_parameters.keys():
-            if np.isscalar(getattr(self, name)):
+
+        for name in param_names:
+            par = getattr(self, name)
+            if np.isscalar(par):
                 gen.scalars.append(name)
-            elif isinstance(getattr(self, name), np.ndarray):
+            elif isinstance(par, np.ndarray):
                 gen.arrays.append(name)
+
 
         glb = {
             "calc_dv": jit_ops["calc_dv"], 
@@ -172,9 +195,15 @@ class AlievPanfilov(CardiacModel):
         """
         Executes the ionic kernel for the Aliev-Panfilov model.
         """
-        self._kernel(self.u_new, self.cardiac_tissue.myo_indexes, self.dt, self.step,
-                        self.u, self.v, self.a, self.k, self.mu1, self.mu2, self.eps,
-                        *self._buffs)
+        args = [getattr(self, name) for name in self._kernel_args_order]
+        self._kernel(
+            self.u_new,
+            self.cardiac_tissue.myo_indexes,
+            self.dt,
+            self.step,
+            *args,
+            *self._buffs,
+        )
 
     def select_stencil(self, cardiac_tissue):
         """

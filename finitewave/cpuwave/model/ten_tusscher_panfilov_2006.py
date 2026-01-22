@@ -144,7 +144,7 @@ class TenTusscherPanfilov2006Kernel(IonicKernelGenerator):
         )
 
         # --- Voltage ---
-        {u_new} -= dt * (calc_rhs(
+        {u_new} = u_loc + dt * (-calc_rhs(
             ikr, iks, ik1, ito,
             ina, ibna,
             ical, ibca,
