@@ -7,7 +7,7 @@ from finitewave.cpuwave.model import (
     BuenoOrovio,
     LuoRudy91,
     TenTusscherPanfilov2006,
-    # Courtemanche,
+    Courtemanche,
 )
 from finitewave.cpuwave.stencil import (
     AsymmetricStencil2D,

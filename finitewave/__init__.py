@@ -44,7 +44,7 @@ from finitewave.cpuwave import (
     BuenoOrovio,
     LuoRudy91,
     TenTusscherPanfilov2006,
-    # Courtemanche,
+    Courtemanche,
     AsymmetricStencil2D,
     # SymmetricStencil2D,
     IsotropicStencil2D,
