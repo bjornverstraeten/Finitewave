@@ -2,9 +2,9 @@ from finitewave.cpuwave.fibrosis import DiffusePattern, StructuralPattern
 from finitewave.cpuwave.model import (
     AlievPanfilov,
     Barkley,
-    # MitchellSchaeffer,
+    MitchellSchaeffer,
     FentonKarma,
-    # BuenoOrovio,
+    BuenoOrovio,
     LuoRudy91,
     TenTusscherPanfilov2006,
     # Courtemanche,

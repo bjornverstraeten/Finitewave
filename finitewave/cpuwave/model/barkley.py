@@ -43,7 +43,7 @@ class BarkleyKernel(IonicKernelGenerator):
 
 class Barkley(CardiacModel):
     """
-    Two-dimensional implementation of the Barkley model for excitable media.
+    Implementation of the Barkley model for excitable media.
 
     The Barkley model is a simplified two-variable reaction–diffusion system
     originally developed to study wave propagation in excitable media. While it is 
