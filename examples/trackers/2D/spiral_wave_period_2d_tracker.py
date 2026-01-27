@@ -57,23 +57,23 @@ import finitewave as fw
 
 # number of nodes on the side
 n = 200
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt    = 0.01
 aliev_panfilov.dr    = 0.25
 aliev_panfilov.t_max = 300
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, n, 0, n//2))
-stim_sequence.add_stim(fw.StimVoltageCoord2D(31, 1, 0, n//2, 0, n))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, n, 0, n//2))
+stim_sequence.add_stim(fw.StimVoltageCoord(31, 1, 0, n//2, 0, n))
 
 tracker_sequence = fw.TrackerSequence()
 # add action potential tracker
 # # add period tracker:
-period_tracker = fw.Period2DTracker()
+period_tracker = fw.PeriodTracker()
 # Here we create an int array of detectors as a list of positions in which we want to calculate the period.
 positions = np.array([[1, 1], [5, 5], [7, 3], [9, 1],
                       [100, 100], [150, 3], [100, 150]])

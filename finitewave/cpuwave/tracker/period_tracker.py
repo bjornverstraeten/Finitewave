@@ -61,16 +61,22 @@ class PeriodTracker(LocalActivationTimeTracker):
 
     @property
     def output(self):
-        lats = np.asarray(self.act_t).T  # (n_det, n_layers)
+        """
+        Property to get the computed activation periods.
 
-        # periods per detector: diffs between successive non -1 times
-        periods = []
-        for row in lats:
-            t = row[row != -1]
-            periods.append(np.diff(t) if len(t) >= 2 else np.array([], dtype=float))
-
-        # keep as a series-of-arrays like before, but in a dataframe for easy CSV
-        return pd.DataFrame({"periods": periods})
+        Returns
+        -------
+        pd.DataFrame
+            A DataFrame containing the computed activation periods.
+        """
+        lats = np.array(self.act_t)
+        lats = pd.DataFrame(lats.T)
+        periods = lats.apply(lambda row: np.diff(row[row != -1]), axis=1)
+        return periods
 
     def write(self):
-        self.output.to_csv(Path(self.path, self.file_name).with_suffix(".csv"), index=False)
+        """
+        Saves the computed activation periods to a CSV file.
+        """
+        periods = self.output
+        periods.to_csv(Path(self.path, self.file_name).with_suffix(".csv"))

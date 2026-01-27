@@ -62,24 +62,24 @@ import finitewave as fw
 # set up the tissue:
 n = 200
 
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 # create a mesh of cardiomyocytes (elems = 1):
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.0015
 aliev_panfilov.dr = 0.1
 aliev_panfilov.t_max = 50
 
 # induce the spiral wave:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1,
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1,
                                              0, n,
                                              0, 5))
 
 tracker_sequence = fw.TrackerSequence()
 # create an ECG tracker:
-ecg_tracker = fw.ECG2DTracker()
+ecg_tracker = fw.ECGTracker()
 ecg_tracker.start_time = 0
 ecg_tracker.step = 100
 ecg_tracker.measure_coords = np.array([[n//2, n//2, 10],

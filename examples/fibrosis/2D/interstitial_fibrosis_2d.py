@@ -40,8 +40,8 @@ import finitewave as fw
 
 n = 200
 # create mesh
-tissue = fw.CardiacTissue2D((n, n))
-tissue.add_pattern(fw.Structural2DPattern(density=0.2, length_i=1, length_j=4, x1=0, x2=n, y1=0, y2=n))
+tissue = fw.CardiacTissue((n, n))
+tissue.add_pattern(fw.StructuralPattern(density=0.2, length_i=1, length_j=4, x1=0, x2=n, y1=0, y2=n))
 
 plt.title("2D Interstitial Fibrosis Medium with 20% Fibrosis Density and 4 pixels length")
 plt.imshow(tissue.mesh)

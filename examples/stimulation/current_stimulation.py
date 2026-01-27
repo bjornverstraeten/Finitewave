@@ -36,7 +36,7 @@ import finitewave as fw
 
 # set up the tissue:
 n = 200
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
@@ -46,14 +46,14 @@ stim_sequence = fw.StimSequence()
 # сurrent stimulation is set by current strength (18) and stimulation duration (0.4 model time units). 
 # Current stimulation allows to bypass the problem of sink-source mismatch
 # and stimulate even small areas of tissue to start a depolarization wave:
-stim_sequence.add_stim(fw.StimCurrentCoord2D(time=0,
+stim_sequence.add_stim(fw.StimCurrentCoord(time=0,
                                              curr_value=18,
                                              duration=0.4, 
                                              x1=n//2 - 1, x2=n//2 + 1, 
                                              y1=n//2 - 1, y2=n//2 + 1))
 
 # create model object and set up parameters:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 10

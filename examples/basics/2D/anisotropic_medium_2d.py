@@ -51,7 +51,7 @@ import finitewave as fw
 n = 400
 # fiber orientation angle
 alpha = 0.25 * np.pi
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 # create a mesh of cardiomyocytes (elems = 1):
 tissue.mesh = np.ones([n, n])
 tissue.add_boundaries()
@@ -62,11 +62,11 @@ tissue.fibers[:, :, 1] = np.sin(alpha)
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, n//2 - 3, n//2 + 3,
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, n//2 - 3, n//2 + 3,
                                                 n//2 - 3, n//2 + 3))
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 # set up numerical parameters:
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25

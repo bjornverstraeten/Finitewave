@@ -52,7 +52,7 @@ import finitewave as fw
 
 # set up cardiac tissue:
 n = 400
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
@@ -65,10 +65,10 @@ ii, jj = draw.disk([300, 100], 5)
 stim_area[ii, jj] = True
 ii, jj = draw.disk([300, 300], 5)
 stim_area[ii, jj] = True
-stim_sequence.add_stim(fw.StimVoltageMatrix2D(0, 1, stim_area))
+stim_sequence.add_stim(fw.StimVoltageMatrix(0, 1, stim_area))
 
 # create model object:
-fenton_karma = fw.FentonKarma2D()
+fenton_karma = fw.FentonKarma()
 # set up numerical parameters:
 fenton_karma.dt = 0.01
 fenton_karma.dr = 0.25

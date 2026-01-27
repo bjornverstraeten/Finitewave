@@ -48,18 +48,18 @@ import matplotlib.pyplot as plt
 import finitewave as fw
 
 n = 200
-tissue = fw.CardiacTissue2D((n, n))
+tissue = fw.CardiacTissue((n, n))
 
 stim_sequence = fw.StimSequence()
 
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, n, 0, n//2))
-stim_sequence.add_stim(fw.StimVoltageCoord2D(31, 1, 0, n//2, 0, n))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, n, 0, n//2))
+stim_sequence.add_stim(fw.StimVoltageCoord(31, 1, 0, n//2, 0, n))
 # extra stimuli to break the spiral waves: 
-stim_sequence.add_stim(fw.StimCurrentCoord2D(75, 3, 3, 90, 100, n//2, n))
-stim_sequence.add_stim(fw.StimCurrentCoord2D(125, 3, 3, 90, 100, n//2, n))
+stim_sequence.add_stim(fw.StimCurrentCoord(75, 3, 3, 90, 100, n//2, n))
+stim_sequence.add_stim(fw.StimCurrentCoord(125, 3, 3, 90, 100, n//2, n))
 
 # Set up the Aliev-Panfilov model:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 195

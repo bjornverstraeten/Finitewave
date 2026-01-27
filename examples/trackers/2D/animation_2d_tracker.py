@@ -56,16 +56,16 @@ import finitewave as fw
 
 # set up the tissue:
 n = 200
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, n, 0, n//2))
-stim_sequence.add_stim(fw.StimVoltageCoord2D(31, 1, 0, n//2, 0, n))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, n, 0, n//2))
+stim_sequence.add_stim(fw.StimVoltageCoord(31, 1, 0, n//2, 0, n))
 
 # set up tracker parameters:
 tracker_sequence = fw.TrackerSequence()
-animation_tracker = fw.Animation2DTracker()
+animation_tracker = fw.AnimationTracker()
 animation_tracker.variable_name = "u"  # Specify the variable to track
 animation_tracker.dir_name = "anim_data"
 animation_tracker.step = 10
@@ -73,7 +73,7 @@ animation_tracker.overwrite = True  # Remove existing files in dir_name
 tracker_sequence.add_tracker(animation_tracker)
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 # set up numerical parameters:
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25

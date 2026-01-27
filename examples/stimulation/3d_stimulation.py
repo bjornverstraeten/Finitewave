@@ -5,8 +5,8 @@ Stimulation in 3D
 Overview:
 ---------
 This example demonstrates how to apply two opposite planar waves in 3D tissue using:
-- `StimVoltageCoord3D`: voltage stimulation with spatial bounds (`x1`, `x2`, `y1`, `y2`, `z1`, `z2`)
-- `StimCurrentMatrix3D`: matrix-based current stimulation with a 3D boolean array.
+- `StimVoltageCoord`: voltage stimulation with spatial bounds (`x1`, `x2`, `y1`, `y2`, `z1`, `z2`)
+- `StimCurrentMatrix`: matrix-based current stimulation with a 3D boolean array.
 
 The example highlights that 3D stimulation setup is identical to 2D, 
 with the only difference being the inclusion of the Z-axis (`z1`, `z2` or 3D matrix).
@@ -33,27 +33,27 @@ import finitewave as fw
 nx = 200
 ny = 200
 nz = 30
-tissue = fw.CardiacTissue3D([nx, ny, nz])
+tissue = fw.CardiacTissue([nx, ny, nz])
 tissue.mesh = np.ones((nx, ny, nz), dtype=np.uint8)
 
-# stimulus 1: VoltageCoord3D on left face
+# stimulus 1: VoltageCoord on left face
 stim_sequence = fw.StimSequence()
 stim_sequence.add_stim(
-    fw.StimVoltageCoord3D(time=0, volt_value=1.0,
+    fw.StimVoltageCoord(time=0, volt_value=1.0,
                           x1=0, x2=5,
                           y1=0, y2=ny,
                           z1=0, z2=nz)
 )
 
-# stimulus 2: CurrentMatrix3D on right face
+# stimulus 2: CurrentMatrix on right face
 stim_matrix = np.zeros((nx, ny, nz), dtype=bool)
 stim_matrix[nx - 5:nx, :, :] = True  # Right face
 stim_sequence.add_stim(
-    fw.StimCurrentMatrix3D(time=0, curr_value=10, duration=0.5, matrix=stim_matrix)
+    fw.StimCurrentMatrix(time=0, curr_value=10, duration=0.5, matrix=stim_matrix)
 )
 
 # model setup:
-model = fw.AlievPanfilov3D()
+model = fw.AlievPanfilov()
 model.dt = 0.01
 model.dr = 0.25
 model.t_max = 10

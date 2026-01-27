@@ -64,13 +64,13 @@ import finitewave as fw
 # number of nodes on the side
 n = 300
 
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 # create a mesh of cardiomyocytes (elems = 1):
 tissue.mesh = np.ones([n, n], dtype=float)
 # add empty nodes on the sides (elems = 0):
 
 # create model object:
-fenton_karma = fw.FentonKarma2D()
+fenton_karma = fw.FentonKarma()
 # set up numerical parameters:
 fenton_karma.dt    = 0.01
 fenton_karma.dr    = 0.25
@@ -94,7 +94,7 @@ fenton_karma.command_sequence = command_sequence
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, n, 0, 5))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, n, 0, 5))
 
 # add the tissue and the stim parameters to the model object:
 fenton_karma.cardiac_tissue = tissue

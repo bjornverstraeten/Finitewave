@@ -62,10 +62,10 @@ import finitewave as fw
 
 # number of nodes on the side
 n = 200
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 # set up numerical parameters:
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.3
@@ -73,14 +73,14 @@ aliev_panfilov.t_max = 200
 
 # induce spiral wave:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(time=0, volt_value=1, x1=0, x2=n,
+stim_sequence.add_stim(fw.StimVoltageCoord(time=0, volt_value=1, x1=0, x2=n,
                                              y1=0, y2=5))
-stim_sequence.add_stim(fw.StimVoltageCoord2D(time=50, volt_value=1, x1=n//2,
+stim_sequence.add_stim(fw.StimVoltageCoord(time=50, volt_value=1, x1=n//2,
                                              x2=n, y1=0, y2=n))
 
 # set up the tracker:
 tracker_sequence = fw.TrackerSequence()
-act_time_tracker = fw.LocalActivationTime2DTracker()
+act_time_tracker = fw.LocalActivationTimeTracker()
 act_time_tracker.threshold = 0.5
 act_time_tracker.step = 10
 act_time_tracker.start_time = 100

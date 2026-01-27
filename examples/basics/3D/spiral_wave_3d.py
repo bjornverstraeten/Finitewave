@@ -69,7 +69,7 @@ def create_sphere_mask(shape, radius, center):
 # set up the cardiac tissue:
 n = 200
 shape = (n, n, n)
-tissue = fw.CardiacTissue3D((n, n, n))
+tissue = fw.CardiacTissue((n, n, n))
 tissue.mesh = np.zeros((n, n, n))
 tissue.mesh[create_sphere_mask(tissue.mesh.shape,
                                n//2-5,
@@ -81,12 +81,12 @@ tissue.mesh[create_sphere_mask(tissue.mesh.shape,
 # set up stimulation parameters:
 min_x = np.where(tissue.mesh)[0].min()
 
-stim1 = fw.StimVoltageCoord3D(0, 1,
+stim1 = fw.StimVoltageCoord(0, 1,
                               min_x, min_x + 3,
                               0, n,
                               0, n)
 
-stim2 = fw.StimVoltageCoord3D(50, 1,
+stim2 = fw.StimVoltageCoord(50, 1,
                               0, n,
                               0, n//2,
                               0, n)
@@ -95,7 +95,7 @@ stim_sequence = fw.StimSequence()
 stim_sequence.add_stim(stim1)
 stim_sequence.add_stim(stim2)
 
-aliev_panfilov = fw.AlievPanfilov3D()
+aliev_panfilov = fw.AlievPanfilov()
 # set up numerical parameters:
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25

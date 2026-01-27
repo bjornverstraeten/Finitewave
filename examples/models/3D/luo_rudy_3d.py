@@ -79,14 +79,3 @@ plt.ylabel('Voltage (mV)')
 plt.title('Action Potential')
 plt.grid()
 plt.show()
-
-# plot IK current
-plt.figure()
-time_ik = np.arange(len(luo_rudy.ik_obs)) * luo_rudy.dt
-plt.plot(time_ik, luo_rudy.ik_obs, label="IK Current at cell (5,2,1)")
-plt.legend(title='Luo-Rudy 1991')
-plt.xlabel('Time (ms)')
-plt.ylabel('IK Current (uA/cm^2)')
-plt.title('IK Current Over Time')
-plt.grid()
-plt.show()

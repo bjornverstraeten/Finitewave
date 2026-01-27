@@ -63,19 +63,19 @@ fibers = np.zeros(mesh.shape + (3,), dtype=float)
 fibers[mesh > 0] = fibers_list
 
 # set up the tissue with fibers orientation:
-tissue = fw.CardiacTissue3D(mesh.shape)
+tissue = fw.CardiacTissue(mesh.shape)
 tissue.mesh = mesh
 tissue.add_boundaries()
 tissue.fibers = fibers
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord3D(0, 1, 0, mesh.shape[0],
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, mesh.shape[0],
                                              0, mesh.shape[0],
                                              0, 20))
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov3D()
+aliev_panfilov = fw.AlievPanfilov()
 # set up numerical parameters:
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25

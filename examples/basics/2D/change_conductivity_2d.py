@@ -50,18 +50,18 @@ import finitewave as fw
 
 # create a tissue of size 400x400 with cardiomycytes:
 n = 400
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 tissue.conductivity = np.ones([n, n], dtype=float)
 tissue.conductivity[n//2:, n//2:] = 0.3
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1,
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1,
                                              n//2 - 3, n//2 + 3,
                                              n//2 - 3, n//2 + 3))
 
 # create model object and set up parameters:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 30

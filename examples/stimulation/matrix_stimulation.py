@@ -40,7 +40,7 @@ import finitewave as fw
 
 # set up the tissue:
 n = 200
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
@@ -52,12 +52,12 @@ stimulation_area = np.full([n, n], False, dtype=bool)
 stimulation_area[0:10, 0:10] = True
 stimulation_area[n-10:n, n-10:n] = True
 
-stim_sequence.add_stim(fw.StimVoltageMatrix2D(time=0, 
+stim_sequence.add_stim(fw.StimVoltageMatrix(time=0, 
                                              volt_value=1.0, 
                                              matrix=stimulation_area))
 
 # create model object and set up parameters:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 15

@@ -53,10 +53,10 @@ import finitewave as fw
 
 # number of nodes on the side
 n = 100
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 
 # set up numerical parameters:
 aliev_panfilov.dt = 0.01
@@ -65,12 +65,12 @@ aliev_panfilov.t_max = 100
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, 3, 0, n))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 3, 0, n))
 
 tracker_sequence = fw.TrackerSequence()
 
 # add the variable tracker:
-multivariable_tracker = fw.MultiVariable2DTracker()
+multivariable_tracker = fw.VariablesTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 multivariable_tracker.cell_ind = [30, 30]
 multivariable_tracker.var_list = ["u", "v"]

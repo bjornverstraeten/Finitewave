@@ -33,16 +33,16 @@ import finitewave as fw
 
 # create a tissue:
 n = 100
-k = 5
-m = 3
-tissue = fw.CardiacTissue3D([n, m, k])
+m = 5
+k = 3
+tissue = fw.CardiacTissue([n, m, k])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord3D(0, 1, 0, 5, 0, m, 0, k))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 5, 0, m, 0, k))
 
 # create model object and set up parameters:
-bueno_orovio = fw.BuenoOrovio3D()
+bueno_orovio = fw.BuenoOrovio()
 bueno_orovio.dt = 0.01
 bueno_orovio.dr = 0.25
 bueno_orovio.t_max = 500
@@ -51,7 +51,7 @@ bueno_orovio.cardiac_tissue = tissue
 bueno_orovio.stim_sequence = stim_sequence
 
 tracker_sequence = fw.TrackerSequence()
-action_pot_tracker = fw.ActionPotential3DTracker()
+action_pot_tracker = fw.ActionPotentialTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 # eather list or list of lists can be used
 action_pot_tracker.cell_ind = [[50, 3, 1]]

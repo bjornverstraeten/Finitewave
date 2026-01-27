@@ -52,22 +52,22 @@ import finitewave as fw
 
 # create a mesh of cardiomyocytes (elems = 1):
 n = 200
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(time=0, volt_value=1,
+stim_sequence.add_stim(fw.StimVoltageCoord(time=0, volt_value=1,
                                              x1=0, x2=3, y1=0, y2=n))
 
 # set up tracker parameters:
 tracker_sequence = fw.TrackerSequence()
-act_time_tracker = fw.ActivationTime2DTracker()
+act_time_tracker = fw.ActivationTimeTracker()
 act_time_tracker.threshold = 0.5
 act_time_tracker.step = 100  # calculate activation time every 100 steps
 tracker_sequence.add_tracker(act_time_tracker)
 
 # create model object and set up parameters:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 50

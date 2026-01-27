@@ -36,14 +36,14 @@ n = 100
 m = 5
 k = 3
 # create mesh
-tissue = fw.CardiacTissue3D((n, m, k))
+tissue = fw.CardiacTissue((n, m, k))
 
 # set up stimulation parameters
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord3D(0, 1, 0, 5, 0, m, 0, k))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 5, 0, m, 0, k))
 
 # create model object and set up parameters
-tp06 = fw.TP063D()
+tp06 = fw.TenTusscherPanfilov2006()
 tp06.dt = 0.01
 tp06.dr = 0.25
 tp06.t_max = 500
@@ -53,7 +53,7 @@ tp06.cardiac_tissue = tissue
 tp06.stim_sequence = stim_sequence
 
 tracker_sequence = fw.TrackerSequence()
-action_pot_tracker = fw.ActionPotential3DTracker()
+action_pot_tracker = fw.ActionPotentialTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 # eather list or list of lists can be used
 action_pot_tracker.cell_ind = [[50, 3, 1]]

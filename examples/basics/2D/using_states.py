@@ -66,11 +66,11 @@ import finitewave as fw
 # number of nodes on the side
 # create a tissue of size 400x400 with cardiomycytes:
 n = 400
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, n//2 - 5, n//2 + 5,
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, n//2 - 5, n//2 + 5,
                                              n//2 - 5, n//2 + 5))
 
 # set up state saver parameters:
@@ -80,7 +80,7 @@ state_savers.savers.append(fw.StateSaver("state_0", time=10)) # will save at t=1
 state_savers.savers.append(fw.StateSaver("state_1")) # will save at t=20 (at the end of the run)
 
 # create model object and set up parameters:
-mitchell_schaeffer = fw.MitchellSchaeffer2D()
+mitchell_schaeffer = fw.MitchellSchaeffer()
 mitchell_schaeffer.dt = 0.01
 mitchell_schaeffer.dr = 0.25
 mitchell_schaeffer.t_max = 20
@@ -106,7 +106,7 @@ gc.collect()
 
 
 # recreate the model
-mitchell_schaeffer = fw.MitchellSchaeffer2D()
+mitchell_schaeffer = fw.MitchellSchaeffer()
 
 # set up numerical parameters:
 mitchell_schaeffer.dt = 0.01
@@ -120,7 +120,7 @@ mitchell_schaeffer.run()
 u_after = mitchell_schaeffer.u.copy()
 
 # recreate the model
-mitchell_schaeffer = fw.MitchellSchaeffer2D()
+mitchell_schaeffer = fw.MitchellSchaeffer()
 
 # set up numerical parameters:
 mitchell_schaeffer.dt = 0.01

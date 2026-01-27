@@ -9,14 +9,14 @@ to apply a voltage-based stimulus to a rectangular region in a 2D cardiac tissue
 
 Stimulation Setup:
 ------------------
-- The `StimVoltageCoord2D` class is used to define the stimulated region by its coordinates.
+- The `StimVoltageCoord` class is used to define the stimulated region by its coordinates.
 - A square region (6×6 nodes) at the center of the tissue is stimulated at t = 0 .
 - The voltage value is set to 1.0, which for the Aliev-Panfilov model corresponds 
   to the peak excitation potential (resting = 0, peak = 1).
 
 Simulation Parameters:
 ----------------------
-- Model: Aliev-Panfilov 2D
+- Model: Aliev-Panfilov
 - Grid size: 200 × 200
 - Time step (dt): 0.01
 - Space step (dr): 0.25
@@ -36,7 +36,7 @@ import finitewave as fw
 
 # set up the tissue:
 n = 200
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
@@ -45,13 +45,13 @@ stim_sequence = fw.StimSequence()
 # The voltage value should be set between the resting potential and the peak potential of
 # the model to ensure the stimulation is effective.
 # in case of Aliev-Panfilov model, the resting potential is 0 and the peak potential is 1:
-stim_sequence.add_stim(fw.StimVoltageCoord2D(time=0, 
+stim_sequence.add_stim(fw.StimVoltageCoord(time=0, 
                                              volt_value=1.0, 
                                              x1=n//2 - 3, x2=n//2 + 3, 
                                              y1=n//2 - 3, y2=n//2 + 3))
 
 # create model object and set up parameters:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 10
