@@ -37,8 +37,8 @@ class LocalActivationTimeTracker(Tracker):
         Tracker.__init__(self)
         self.act_t = []  # Initialize activation times as an empty array
         self.threshold = -40  # Activation threshold
-        self.file_name = "local_act_time"  # Output file name
-        self._activated = None  # Array to store the activation state
+        self.file_name = "local_act_time_2d"  # Output file name
+        self._activated = np.ndarray  # Array to store the activation state
 
     def initialize(self, model):
         """
@@ -63,7 +63,7 @@ class LocalActivationTimeTracker(Tracker):
         cross_mask = self.cross_threshold()
         # Check if there are already activated cells in the current
         # activation layer
-        if np.any(self.act_t[-1] > -1) and np.any(cross_mask):
+        if np.any(self.act_t[-1][cross_mask] > -1):
             self.act_t.append(-np.ones(self.model.u.shape))
         # Update activation times where the threshold is crossed
         self.act_t[-1] = np.where(cross_mask, self.model.t, self.act_t[-1])

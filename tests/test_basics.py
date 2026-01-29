@@ -7,16 +7,16 @@ import finitewave as fw
 
 def test_state_loading():
     n = 5
-    tissue = fw.CardiacTissue2D([n, n])
+    tissue = fw.CardiacTissue([n, n])
 
     stim_sequence = fw.StimSequence()
-    stim_sequence.add_stim(fw.StimCurrentCoord2D(0, 10, 0.5, 1, n//2, n//2 + 1,
-                                                 n//2, n//2 + 1))
+    stim_sequence.add_stim(fw.StimCurrentCoord(0, 10, 0.5, n//2, n//2 + 1,
+                                                 n//2, n//2 + 1, u_max=1))
 
     state_saver = fw.StateSaverCollection()
     state_saver.savers.append(fw.StateSaver("state_0", time=3))
 
-    model = fw.FentonKarma2D()
+    model = fw.FentonKarma()
     model.dt = 0.01
     model.dr = 0.25
     model.t_max = 5
@@ -32,7 +32,7 @@ def test_state_loading():
     w_before = model.w.copy()
 
     # recreate the model
-    model = fw.FentonKarma2D()
+    model = fw.FentonKarma()
     model.dt = 0.01
     model.dr = 0.25
     model.t_max = 5
@@ -51,11 +51,11 @@ def test_state_loading():
 
 def test_commands():
     n = 5
-    tissue = fw.CardiacTissue2D([n, n])
+    tissue = fw.CardiacTissue([n, n])
 
     stim_sequence = fw.StimSequence()
 
-    model = fw.FentonKarma2D()
+    model = fw.FentonKarma()
     model.dt = 0.01
     model.dr = 0.25
     model.t_max = 10

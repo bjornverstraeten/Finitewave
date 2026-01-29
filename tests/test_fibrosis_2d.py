@@ -1,7 +1,6 @@
 import random
 import numpy as np
-from finitewave.cpuwave2D.fibrosis.diffuse_2d_pattern import Diffuse2DPattern
-from finitewave.cpuwave2D.fibrosis.structural_2d_pattern import Structural2DPattern
+import finitewave as fw
 
 def test_diffuse_fibrosis_2d():
     shape = (1000, 1000)
@@ -11,7 +10,7 @@ def test_diffuse_fibrosis_2d():
 
     random.seed(0)
 
-    pattern = Diffuse2DPattern(density=density, x1=x1, x2=x2, y1=y1, y2=y2)
+    pattern = fw.DiffusePattern(density=density, x1=x1, x2=x2, y1=y1, y2=y2)
     result = pattern.generate(shape=shape)
 
     assert result.shape == shape, "Diffuse: shape mismatch"
@@ -33,7 +32,7 @@ def test_structural_fibrosis_2d():
 
     random.seed(0)
 
-    pattern = Structural2DPattern(
+    pattern = fw.StructuralPattern(
         density=density, length_i=length_i, length_j=length_j,
         x1=x1, x2=x2, y1=y1, y2=y2
     )
