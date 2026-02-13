@@ -7,8 +7,13 @@ REQS = ("get_variables", "get_parameters")
 
 @lru_cache(maxsize=1)
 def discover() -> dict:
-    eps = entry_points(group="finitewave.models")
-    return {ep.name: ep for ep in eps}
+    eps = entry_points()
+    group = "finitewave.models"
+    if hasattr(eps, "select"):
+        selected = eps.select(group=group)
+    else:
+        selected = eps.get(group, [])
+    return {ep.name: ep for ep in selected}
 
 
 def load_ops(model_id: str):
