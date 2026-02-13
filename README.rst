@@ -122,7 +122,7 @@ Add empty nodes (0) at the mesh edges to simulate boundaries.
 .. code-block:: Python
 
     n = 100
-    tissue = fw.CardiacTissue2D([n, n])
+    tissue = fw.CardiacTissue([n, n])
 
 Mesh
 """"
@@ -198,7 +198,7 @@ cardiac tissue models.
 .. code-block:: Python
 
     # Set up Aliev-Panfilov model to perform simulations
-    aliev_panfilov = fw.AlievPanfilov2D()
+    aliev_panfilov = fw.AlievPanfilov()
     aliev_panfilov.dt = 0.01                # time step
     aliev_panfilov.dr = 0.25                # space step
     aliev_panfilov.t_max = 10               # simulation time
@@ -213,7 +213,7 @@ lead to incorrect simulation results.
 Available models
 """""""""""""""""""""""""""
 
-Currently, finitewave includes eight built-in models for 2D and 3D simulations,
+Currently, finitewave includes eight built-in models for 2D/3D simulations,
 but you can easily add your own models by extending the base class and
 implementing the necessary methods.
 
@@ -252,7 +252,7 @@ the stimulation area, triggering wave propagation from this region.
 
 .. code-block:: Python
 
-    stim_voltage = fw.StimVoltageCoord2D(time=0,
+    stim_voltage = fw.StimVoltageCoord(time=0,
                                          volt_value=1,
                                          x1=1, x2=n-1, y1=1, y2=3)
 
@@ -266,7 +266,7 @@ it simulates the activity of external electrodes.
 
 .. code-block:: Python
 
-    stim_current = fw.StimCurrentCoord2D(time=0,
+    stim_current = fw.StimCurrentCoord(time=0,
                                          curr_value=5,
                                          curr_time=1,
                                          x1=1, x2=n-1, y1=1, y2=3)
@@ -284,7 +284,7 @@ stimulation patterns.
     # Stimulate a 6x6 area in the middle of the mesh
     stim_matrix = np.zeros([n, n], dtype=bool)
     stim_matrix[n//2 - 3: n//2 + 3 , n//2 - 3: n//2 + 3] = True
-    stim_current_matrix = fw.StimCurrentMatrix2D(time=0,
+    stim_current_matrix = fw.StimCurrentMatrix(time=0,
                                                  curr_value=0.15,
                                                  curr_time=1,
                                                  matrix=stim_matrix))
@@ -307,7 +307,7 @@ the model, which can be useful for simulating complex stimulation protocols
     stim_sequence = fw.StimSequence()
 
     for i in range(0, 100, 10):
-        stim_sequence.add_stim(fw.StimVoltageCoord2D(time=i,
+        stim_sequence.add_stim(fw.StimVoltageCoord(time=i,
                                                      volt_value=1,
                                                      x1=1, x2=n-1, y1=1, y2=3))
 
@@ -322,7 +322,7 @@ can be found in the documentation and examples.
 .. code-block:: Python
 
     # set up activation time tracker:
-    act_time_tracker = fw.ActivationTime2DTracker()
+    act_time_tracker = fw.ActivationTimeTracker()
     act_time_tracker.threshold = 0.5
     act_time_tracker.step = 100  # calculate activation time every 100 steps
 
@@ -363,12 +363,12 @@ activation time for all nodes, and the action potential for a specific node.
 .. code-block:: Python
     
     # set up first activation time tracker:
-    act_time_tracker = fw.ActivationTime2DTracker()
+    act_time_tracker = fw.ActivationTimeTracker()
     act_time_tracker.threshold = 0.5
     act_time_tracker.step = 100  # calculate activation time every 100 steps
 
     # set up action potential tracker for a specific node:
-    action_pot_tracker = fw.ActionPotential2DTracker()
+    action_pot_tracker = fw.ActionPotentialTracker()
     action_pot_tracker.cell_ind = [30, 30]
 
     tracker_sequence = fw.TrackerSequence()
@@ -398,7 +398,7 @@ Run the simulation
 """"""""""""""""""
 
 Finally, we can run the simulation by calling the ``run()`` method of the
-``AlievPanfilov2D`` model.
+``AlievPanfilov`` model.
 
 .. code-block:: Python
 
@@ -422,14 +422,14 @@ steps described above:
     
     # set up the tissue:
     n = 100
-    tissue = fw.CardiacTissue2D([n, n])
+    tissue = fw.CardiacTissue([n, n])
     # set up the stimulation:
     stim_sequence = fw.StimSequence()
-    stim_sequence.add_stim(fw.StimVoltageCoord2D(time=0,
+    stim_sequence.add_stim(fw.StimVoltageCoord(time=0,
                                                  volt_value=1,
                                                  x1=1, x2=n-1, y1=1, y2=3))
     # set up the tracker:
-    act_time_tracker = fw.ActivationTime2DTracker()
+    act_time_tracker = fw.ActivationTimeTracker()
     act_time_tracker.threshold = 0.5
     act_time_tracker.step = 100
 
@@ -437,7 +437,7 @@ steps described above:
     tracker_sequence.add_tracker(act_time_tracker)
     
     # set up the model
-    aliev_panfilov = fw.AlievPanfilov2D()
+    aliev_panfilov = fw.AlievPanfilov()
     aliev_panfilov.dt = 0.01
     aliev_panfilov.dr = 0.25
     aliev_panfilov.t_max = 10
