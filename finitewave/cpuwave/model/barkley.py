@@ -55,17 +55,18 @@ class Barkley(CardiacModel):
 
     Attributes
     ----------
+    D_model : float
+        Diffusion coefficient for excitation variable.
+    npfloat : str
+        Floating-point precision (default: 'float64').
+
+    Model Variables
+    ---------------
     u : np.ndarray
         Excitation variable (analogous to membrane potential).
     v : np.ndarray
         Recovery variable controlling excitability.
-    D_model : float
-        Diffusion coefficient for excitation variable.
-    state_vars : list of str
-        Names of variables saved during simulation.
-    npfloat : str
-        Floating-point precision (default: 'float64').
-
+    
     Model Parameters
     ----------------
     a : float

@@ -84,10 +84,26 @@ class LuoRudy91(CardiacModel):
 
     Attributes
     ----------
-    state_vars : list of str
-        List of state variable names to save and restore (`u`, `m`, `h`, `j`, `d`, `f`, `x`, `cai`).
     D_model : float
-        Diffusion coefficient representing electrical conductivity in the medium (typically set to 0.1).
+        Diffusion coefficient for the model, used in tissue simulations.
+    npfloat : str
+        String specifying the floating-point precision to use (e.g., 'float64').
+    
+    Model Variables
+    ---------------
+    u : np.ndarray
+        Transmembrane potential in mV.
+    m, h, j : np.ndarray
+        Gating variables for the fast Na⁺ current.
+    d, f : np.ndarray
+        Gating variables for the slow inward Ca²⁺ current.
+    x : np.ndarray
+        Gating variable for the time-dependent K⁺ current.
+    cai : np.ndarray
+        Intracellular calcium concentration in mM.
+        
+    Model Parameters
+    ----------------
     gna, gsi, gk, gk1, gkp, gb : float
         Maximum conductances for Na⁺, Ca²⁺, K⁺, and background channels [mS/μF].
     ko, ki, nao, nai, cao : float

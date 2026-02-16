@@ -62,16 +62,17 @@ class AlievPanfilov(CardiacModel):
 
     Attributes
     ----------
+    D_model : float
+        Diffusion coefficient used for simulating spatial propagation.
+    npfloat : str
+        Floating-point precision used in the simulation (default: 'float64').
+
+    Model Variables
+    ---------------
     u : np.ndarray
         Transmembrane potential (dimensionless, normalized to [0,1]).
     v : np.ndarray
         Recovery variable describing refractoriness.
-    D_model : float
-        Diffusion coefficient used for simulating spatial propagation.
-    state_vars : list of str
-        Names of the state variables to be saved and restored.
-    npfloat : str
-        Floating-point precision used in the simulation (default: 'float64').
 
     Model Parameters
     ----------------
@@ -96,19 +97,6 @@ class AlievPanfilov(CardiacModel):
     Pages 293-301,
     ISSN 0960-0779,
     https://doi.org/10.1016/0960-0779(95)00089-5.
-
-    Attributes
-    ----------
-    v : np.ndarray
-        Array for the recovery variable.
-    w : np.ndarray
-        Array for diffusion weights.
-    D_model : float
-        Model specific diffusion coefficient
-    state_vars : list
-        List of state variables to be saved and restored.
-    npfloat : str
-        Data type used for floating-point operations, default is 'float64'.
     """
 
     def __init__(self):

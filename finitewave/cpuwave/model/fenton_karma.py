@@ -76,19 +76,20 @@ class FentonKarma(CardiacModel):
 
     Attributes
     ----------
+    D_model : float
+        Baseline diffusion coefficient used in the diffusion stencil.
+    npfloat : str
+        Floating point precision (default is 'float64').
+
+    Model Variables
+    ---------------
     u : np.ndarray
         Transmembrane potential (normalized, dimensionless).
     v : np.ndarray
         Fast recovery variable, representing sodium channel inactivation.
     w : np.ndarray
         Slow recovery variable, representing calcium channel dynamics.
-    D_model : float
-        Baseline diffusion coefficient used in the diffusion stencil.
-    state_vars : list of str
-        Names of the state variables stored during the simulation.
-    npfloat : str
-        Floating point precision (default is 'float64').
-
+    
     Model Parameters
     ----------------
     tau_r : float

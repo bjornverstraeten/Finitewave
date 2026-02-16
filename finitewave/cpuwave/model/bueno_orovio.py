@@ -95,21 +95,22 @@ class BuenoOrovio(CardiacModel):
 
     Attributes
     ----------
+    D_model : float
+        Diffusion coefficient for spatial propagation.
+    npfloat : str
+        Floating point precision (default: 'float64').
+
+    Model Variables
+    ---------------
     u : np.ndarray
-        Transmembrane potential (dimensionless, typically in [0, 1.55]).
+        Transmembrane potential (dimensionless).
     v : np.ndarray
         Fast gating variable representing sodium channel inactivation.
     w : np.ndarray
         Slow recovery variable representing calcium and potassium gating.
     s : np.ndarray
         Slow variable related to calcium inactivation.
-    D_model : float
-        Diffusion coefficient for spatial propagation.
-    state_vars : list of str
-        Names of state variables to be saved or restored.
-    npfloat : str
-        Floating point precision (default: 'float64').
-
+    
     Model Parameters (EPI set)
     --------------------------
     u_o : float
