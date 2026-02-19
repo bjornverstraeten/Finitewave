@@ -47,11 +47,7 @@ luo_rudy.dt = 0.01
 luo_rudy.dr = 0.25
 luo_rudy.t_max = 500
 
-luo_rudy.ik_obs = [0.0]  # np.zeros(int(luo_rudy.t_max/luo_rudy.dr), dtype=luo_rudy.npfloat)
-# luo_rudy.observers.append ({
-#     "name": "ik_obs",
-#     "expr": "if i_ == 5 and j_ == 2 and k_ == 1 and step % 100 == 0: ik_obs.append(ik)",  # example observer to track IK current
-# })
+luo_rudy.ik_obs = [0.0] 
 
 # add the tissue and the stim parameters to the model object
 luo_rudy.cardiac_tissue = tissue
