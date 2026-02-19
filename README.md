@@ -224,14 +224,14 @@ We use an explicit finite-difference scheme, which requires maintaining an appro
 
 | Model                      | Description |
 |----------------------------|-------------|
-| Aliev-Panfilov             | A phenomenological two-variable model.  <br> [Model Link](https://github.com/finitewave/Aliev-Panfilov-finitewave-model) | 
-| Barkley                    | A simple reaction-diffusion model.  <br> [Model Link](https://github.com/finitewave/Barkley-finitewave-model) |
-| Mitchell-Schaeffer         | A phenomenological two-variable model. <br> [Model Link](https://github.com/finitewave/Mitchell-Schaeffer-finitewave-model) |
-| Fenton-Karma               | A phenomenological three-variables model. <br> [Model Link] (https://github.com/finitewave/Fenton-Karma-finitewave-model) |
-| Bueno-Orovio               | A minimalistic ventricular model. <br> [Model Link](https://github.com/finitewave/Bueno-Orovio-finitewave-model) |
-| Luo-Rudy 1991              | An ionic ventricular guinea pig model. <br> [Model Link](https://github.com/finitewave/Luo-Rudy-91-finitewave-model) |
-| ten Tusscher-Panfilov 2006 | An ionic ventricular human model. <br> [Model Link](https://github.com/finitewave/ten-Tusscher-Panfilov-2006-finitewave-model) |
-| Courtemanche               | An ionic atrial human model. <br> [Model Link](https://github.com/finitewave/Courtemanche-finitewave-model) |
+| Aliev-Panfilov             | A phenomenological two-variable model.  <br> https://github.com/finitewave/Aliev-Panfilov-finitewave-model | 
+| Barkley                    | A simple reaction-diffusion model.  <br> https://github.com/finitewave/Barkley-finitewave-model |
+| Mitchell-Schaeffer         | A phenomenological two-variable model. <br> https://github.com/finitewave/Mitchell-Schaeffer-finitewave-model |
+| Fenton-Karma               | A phenomenological three-variables model. <br> https://github.com/finitewave/Fenton-Karma-finitewave-model) |
+| Bueno-Orovio               | A minimalistic ventricular model. <br> https://github.com/finitewave/Bueno-Orovio-finitewave-model |
+| Luo-Rudy 1991              | An ionic ventricular guinea pig model. <br> https://github.com/finitewave/Luo-Rudy-91-finitewave-model |
+| ten Tusscher-Panfilov 2006 | An ionic ventricular human model. <br> https://github.com/finitewave/ten-Tusscher-Panfilov-2006-finitewave-model |
+| Courtemanche               | An ionic atrial human model. <br> https://github.com/finitewave/Courtemanche-finitewave-model |
 
 ---
 
