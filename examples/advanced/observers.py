@@ -51,6 +51,8 @@ luo_rudy.t_max = 500
 # define an observer to track the IK current at a specific location (e.g., at cell (20, 30))
 # add ik_obs - a numpy array to store the tracked IK current values at each time step). 
 # The name "ik_obs" is used in the observer expression to refer to this array, and the expression updates the array at the specified location and time steps.
+# i_, j_ are the indices of the cell being observed, and step is the current time step in the simulation. The observer updates ik_obs at every 100th time step for the cell at (20, 30).
+# ik is the variable representing the IK current in the Luo-Rudy model. See model kernel implementation for more details on available variables.
 luo_rudy.ik_obs = np.zeros(int(luo_rudy.t_max/luo_rudy.dt/100), dtype=luo_rudy.npfloat)
 luo_rudy.observers.append ({
     "name": "ik_obs",

@@ -26,7 +26,7 @@ try:
 except KeyError as e:
     raise ImportError(
         "Aliev-Panfilov model ops not found. "
-        # "Install model package: pip install finitewave-model-aliev-panfilov"
+        "Install model package: pip install finitewave-model-aliev-panfilov"
     ) from e
 
 

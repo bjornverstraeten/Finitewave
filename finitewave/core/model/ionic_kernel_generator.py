@@ -14,7 +14,7 @@ class IonicKernelGenerator:
 
     Observer notes:
     - This is advanced instrumentation; expr must be numba-friendly and race-safe.
-    - No dynamic append / allocation in parallel kernels.
+    - Better no dynamic append / allocation in parallel kernels.
     """
 
     def __init__(self):
@@ -22,7 +22,7 @@ class IonicKernelGenerator:
         self.scalars = []
         self.args_order = [] # does not include u_new, indexes, dt, step and observers
         self.observers = []
-        self.dimensions = 2
+        self.dimensions = 2 # default to 2D
 
         self.names = ["u"]
         self.param_fields = set()
@@ -40,7 +40,7 @@ class IonicKernelGenerator:
         else:
             raise ValueError("Unsupported number of dimensions")
 
-    def _normalize_observers(self):
+    def generate_observers(self) -> tuple:
         ident = re.compile(r"^[A-Za-z_]\w*$")
 
         if not self.observers:
@@ -113,9 +113,6 @@ class IonicKernelGenerator:
             lines.append(expr)
 
         return args, "\n        ".join(lines) # 8 spaces for indentation
-
-    def generate_observers(self) -> tuple:
-        return self._normalize_observers()
 
     def kernel_func_name(self) -> str:
         return "ionic_kernel"

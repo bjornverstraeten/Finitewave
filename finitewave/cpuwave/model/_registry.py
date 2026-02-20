@@ -29,6 +29,9 @@ def load_ops(model_id: str):
 
 
 def wrap_calc(ops):
+    """
+    Here we identify all functions in the ops module that start with "calc_" or "rhs_", and we apply Numba's JIT compilation to them. 
+    """
     py_funcs = {}
     for name in dir(ops):
         if name.startswith(("calc_", "rhs_")):
