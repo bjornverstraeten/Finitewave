@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import spatial
-from skimage import measure
 
 
 class Velocity2DCalculation:
@@ -96,7 +95,20 @@ class Velocity2DCalculation:
         tuple
             Major and minor axes and the angle of the ellipse.
         """
-        props = measure.regionprops(mask.astype(int))
+        try:
+            from skimage import measure
+        except ImportError as e:
+            raise ImportError(
+                "Velocity estimation requires optional dependency `scikit-image`.\n"
+                "Install with:\n"
+                "  pip install \"finitewave[tools]\""
+            ) from e
+
+        props = measure.regionprops(mask.astype(np.uint8))
+        if not props:
+            raise ValueError("Mask is empty; cannot fit an ellipse (no region found).")
+
+        # regionprops returns lengths of full axes; you use semi-axes (0.5 *)
         major = 0.5 * props[0].major_axis_length
         minor = 0.5 * props[0].minor_axis_length
         orientation = props[0].orientation

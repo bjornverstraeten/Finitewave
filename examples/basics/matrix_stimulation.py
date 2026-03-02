@@ -43,7 +43,9 @@ The final membrane potential distribution is displayed using matplotlib,
 showing how excitation spreads from the stimulated regions.
 """
 
-
+from finitewave.tools.requires import require_import
+require_import("skimage", 'pip install scikit-image')
+ 
 import matplotlib.pyplot as plt
 from skimage import draw
 import numpy as np

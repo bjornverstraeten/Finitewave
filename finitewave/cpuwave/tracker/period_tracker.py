@@ -1,8 +1,12 @@
 from pathlib import Path
 import numpy as np
-import pandas as pd
-import json
 from .local_activation_time_tracker import LocalActivationTimeTracker
+
+try:
+    import pandas as pd  # optional
+except ImportError:  # pandas is optional
+    pd = None
+
 
 
 class PeriodTracker(LocalActivationTimeTracker):
@@ -60,23 +64,58 @@ class PeriodTracker(LocalActivationTimeTracker):
         self.act_t[-1][cross_det] = self.model.t
 
     @property
+    @property
     def output(self):
         """
-        Property to get the computed activation periods.
+        Computed activation periods.
 
         Returns
         -------
-        pd.DataFrame
-            A DataFrame containing the computed activation periods.
+        If pandas is installed:
+            pd.DataFrame (each row: detector, each column: consecutive period)
+        If pandas is not installed:
+            list[np.ndarray] (periods per detector)
         """
-        lats = np.array(self.act_t)
-        lats = pd.DataFrame(lats.T)
-        periods = lats.apply(lambda row: np.diff(row[row != -1]), axis=1)
-        return periods
+        lats = np.array(self.act_t, dtype=float)  # shape (n_layers, n_det)
+        # Compute periods per detector without pandas:
+        periods_list = []
+        for i in range(lats.shape[1]):  # detectors
+            t = lats[:, i]
+            t = t[t != -1]
+            periods_list.append(np.diff(t))
+
+        if pd is None:
+            return periods_list
+
+        # Keep old “DataFrame of variable-length rows” behavior:
+        max_len = max((len(p) for p in periods_list), default=0)
+        data = np.full((len(periods_list), max_len), np.nan, dtype=float)
+        for i, p in enumerate(periods_list):
+            if len(p):
+                data[i, :len(p)] = p
+        return pd.DataFrame(data)
 
     def write(self):
         """
         Saves the computed activation periods to a CSV file.
+
+        Always works (with or without pandas).
         """
+        out_path = Path(self.path, self.file_name).with_suffix(".csv")
+
         periods = self.output
-        periods.to_csv(Path(self.path, self.file_name).with_suffix(".csv"))
+
+        if pd is not None and hasattr(periods, "to_csv"):
+            periods.to_csv(out_path, index=False)
+            return
+
+        # No pandas: write ragged list to CSV (NaN-padded)
+        max_len = max((len(p) for p in periods), default=0)
+        data = np.full((len(periods), max_len), np.nan, dtype=float)
+        for i, p in enumerate(periods):
+            if len(p):
+                data[i, :len(p)] = p
+
+        # header: period_0, period_1, ...
+        header = ",".join([f"period_{k}" for k in range(max_len)])
+        np.savetxt(out_path, data, delimiter=",", header=header, comments="")

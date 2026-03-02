@@ -1,6 +1,5 @@
 import numpy as np
 from scipy import spatial
-from skimage import measure
 
 from finitewave.tools.velocity_2d_calculation import Velocity2DCalculation
 
@@ -68,6 +67,18 @@ class Velocity3DCalculation(Velocity2DCalculation):
         tuple
             Major, medium, minor axes and the angles theta and phi.
         """
+        try:
+            from skimage import measure
+        except ImportError as e:
+            raise ImportError(
+                "Velocity estimation requires optional dependency `scikit-image`.\n"
+                "Install with:\n"
+                "  pip install \"finitewave[tools]\""
+            ) from e
+
+        props = measure.regionprops(mask.astype(np.uint8))
+        if not props:
+            raise ValueError("Mask is empty; cannot fit an ellipse (no region found).")
 
         cov_matrix = measure.inertia_tensor(mask.astype(int))
         eigvals, eigvecs = np.linalg.eig(cov_matrix)

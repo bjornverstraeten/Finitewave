@@ -1,10 +1,46 @@
 from pathlib import Path
 import numpy as np
-import pyvista as pv
-from natsort import natsorted
 from tqdm import tqdm
 
 from finitewave.tools.vis_mesh_builder_3d import VisMeshBuilder3D
+
+
+def _require_3d_tools(format: str):
+    # natsort is required for correct temporal ordering
+    try:
+        from natsort import natsorted
+    except ImportError as e:
+        raise ImportError(
+            "3D animation requires natural sorting of frame files.\n"
+            "Install optional dependencies with:\n"
+            "  pip install \"finitewave[tools]\""
+        ) from e
+
+    # pyvista is required
+    try:
+        import pyvista as pv
+    except ImportError as e:
+        raise ImportError(
+            "3D animation requires PyVista.\n"
+            "Install optional dependencies with:\n"
+            "  pip install \"finitewave[tools]\""
+        ) from e
+
+    # Optional but highly recommended: explicit check for ffmpeg when writing mp4
+    # because many PyVista movie pipelines rely on system FFmpeg.
+    if format == "mp4":
+        import shutil
+        if shutil.which("ffmpeg") is None:
+            raise RuntimeError(
+                "MP4 export requires system FFmpeg (missing `ffmpeg` in PATH).\n\n"
+                "Install FFmpeg:\n"
+                "  - Ubuntu/Debian: sudo apt-get install ffmpeg\n"
+                "  - macOS: brew install ffmpeg\n"
+                "  - Conda: conda install -c conda-forge ffmpeg\n"
+                "  - Windows: winget install Gyan.FFmpeg\n"
+            )
+
+    return natsorted, pv
 
 
 class Animation3DBuilder:
@@ -12,16 +48,6 @@ class Animation3DBuilder:
         pass
 
     def load_scalar(self, path, mask=None):
-        """Load the scalar field from a file.
-
-        Args:
-            path (str): Path to the snapshot folder.
-            mask (np.array, optional): Mask to apply to the scalar field.
-
-        Returns:
-            np.array: Scalar field.
-        """
-
         scalar = np.load(path).astype(float)
 
         if mask is None:
@@ -35,23 +61,26 @@ class Animation3DBuilder:
             scalar_mesh[mask > 0] = scalar
             return scalar_mesh
 
-        raise ValueError("Mask and scalar must have the same shape, or scalar"
-                         + " must have the same shape as mask[mask > 0]")
+        raise ValueError(
+            "Mask and scalar must have the same shape, or scalar must have the same "
+            "shape as mask[mask > 0]"
+        )
 
     def write(
-            self,
-            path,
-            path_save=None,
-            animation_name="animation",
-            mask=None,
-            window_size=(800, 800),
-            clim=[0, 1],
-            scalar_name="Scalar",
-            cmap="viridis",
-            scalar_bar=False,
-            format="mp4",
-            prog_bar=True,
-            **kwargs):
+        self,
+        path,
+        path_save=None,
+        animation_name="animation",
+        mask=None,
+        window_size=(800, 800),
+        clim=(0, 1),
+        scalar_name="Scalar",
+        cmap="viridis",
+        scalar_bar=False,
+        format="mp4",
+        prog_bar=True,
+        **kwargs
+    ):
         """Write the animation to a file.
 
         Args:
@@ -73,44 +102,49 @@ class Animation3DBuilder:
                 Other options are "gif".
         """
 
-        files = natsorted(Path(path).glob("*.npy"))
+        natsorted, pv = _require_3d_tools(format=format)
 
-        if len(files) == 0:
-            raise ValueError("No files found")
+        path = Path(path)
+        files = list(natsorted(path.glob("*.npy")))
+
+        if not files:
+            raise FileNotFoundError(f"No .npy files found in: {path}")
 
         if path_save is None:
             path_save = path.parent
+        path_save = Path(path_save)
 
-        scalar = self.load_scalar(files[0], mask)
+        scalar0 = self.load_scalar(files[0], mask)
 
         if mask is None:
-            mask = np.ones_like(scalar)
+            mask = np.ones_like(scalar0)
 
         mesh_builder = VisMeshBuilder3D()
         mesh_builder.build_mesh(mask)
 
-        pl = pv.Plotter(notebook=False, off_screen=True,
-                        window_size=window_size)
+        pl = pv.Plotter(notebook=False, off_screen=True, window_size=window_size)
 
         if format == "mp4":
-            pl.open_movie(Path(path_save).joinpath(f'{animation_name}.mp4'),
-                          **kwargs)
+            pl.open_movie(path_save / f"{animation_name}.mp4", **kwargs)
         elif format == "gif":
-            pl.open_gif(str(Path(path_save).joinpath(f'{animation_name}.gif')),
-                        **kwargs)
+            pl.open_gif(str(path_save / f"{animation_name}.gif"), **kwargs)
         else:
-            raise ValueError("Format must be 'mp4' or 'gif'")
+            raise ValueError("format must be 'mp4' or 'gif'")
 
-        mesh_builder.add_scalar(scalar, scalar_name)
-        pl.add_mesh(mesh_builder.grid, scalars=scalar_name,
-                    clim=clim, cmap=cmap, show_scalar_bar=scalar_bar)
+        # initial frame
+        mesh_builder.add_scalar(scalar0, scalar_name)
+        pl.add_mesh(
+            mesh_builder.grid,
+            scalars=scalar_name,
+            clim=clim,
+            cmap=cmap,
+            show_scalar_bar=scalar_bar
+        )
 
         pl.show(auto_close=False)
-
         pl.write_frame()
 
-        for filename in tqdm(files[1:], disable=not prog_bar,
-                             desc="Building animation"):
+        for filename in tqdm(files[1:], disable=not prog_bar, desc="Building animation"):
             scalar = self.load_scalar(filename, mask)
             mesh_builder.add_scalar(scalar, scalar_name)
             pl.write_frame()

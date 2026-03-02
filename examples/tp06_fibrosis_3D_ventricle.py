@@ -1,6 +1,6 @@
 
 #
-# Left ventricle simlation with the Aliev-Panfilov model.
+# Left ventricle simlation with the TP06 model.
 # Mesh and fibers were taken from Niderer's data storage (https://zenodo.org/records/3890034)
 # Fibers were generated with Rule-based algorithm.
 # Ventricle is stimulated from the apex.

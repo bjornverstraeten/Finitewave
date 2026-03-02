@@ -90,7 +90,6 @@ aliev_panfilov.tracker_sequence = tracker_sequence
 
 aliev_panfilov.run()
 
-# get the wave period as a pandas Series with the cell index as the index:
 periods = period_tracker.output
 
 # plot the wave period:

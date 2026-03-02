@@ -3,8 +3,6 @@ import shutil
 import numpy as np
 
 from finitewave.core.tracker.tracker import Tracker
-from finitewave.tools import Animation2DBuilder
-from finitewave.tools.animation_3d_builder import Animation3DBuilder
 
 
 class AnimationTracker(Tracker):
@@ -105,6 +103,40 @@ class AnimationTracker(Tracker):
 
         mesh = self.model.cardiac_tissue.mesh
         ndim = self._ndim
+
+        # Lazy imports to keep tracker usable without tools extras:
+        try:
+            from finitewave.tools.animation_2d_builder import Animation2DBuilder
+        except ImportError as e:
+            raise ImportError(
+                "Building animations requires optional dependencies.\n\n"
+                "Install one of the following:\n"
+                "  • Install all tools:\n"
+                "      pip install \"finitewave[tools]\"\n"
+                "  • Install only what you need for 2D MP4:\n"
+                "      pip install natsort ffmpeg-python\n"
+                "    plus system FFmpeg (binary):\n"
+                "      Ubuntu/Debian: sudo apt-get install ffmpeg\n"
+                "      macOS: brew install ffmpeg\n"
+                "      Conda: conda install -c conda-forge ffmpeg\n"
+                "      Windows: winget install Gyan.FFmpeg\n"
+            ) from e
+
+        # Import 3D builder only if needed (so 2D users don't need pyvista):
+        Animation3DBuilder = None
+        if ndim == 3:
+            try:
+                from finitewave.tools.animation_3d_builder import Animation3DBuilder
+            except ImportError as e:
+                raise ImportError(
+                    "Building 3D animations requires optional dependencies.\n\n"
+                    "Install one of the following:\n"
+                    "  • Install all tools:\n"
+                    "      pip install \"finitewave[tools]\"\n"
+                    "  • Install only PyVista (3D rendering):\n"
+                    "      pip install pyvista\n"
+                    "    (MP4 export may also require system FFmpeg depending on your setup.)\n"
+                ) from e
 
         if ndim == 2:
             # Defaults for 2D

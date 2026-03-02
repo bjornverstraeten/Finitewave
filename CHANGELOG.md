@@ -1,6 +1,6 @@
 # Changelog
 
-## [0.9.0]
+## [0.9.0] March 2026
 
 ### Added
 
@@ -9,6 +9,8 @@
 - External model library support. Cardiac models are now maintained in separate repositories and used as dependencies by Finitewave.
 
 - Observers. You can now attach observers that are evaluated during the simulation. See the **observers.py** example.
+
+- Lazy imports and environment checks for heavy or 'problematic' dependencies.
 
 ---
 
