@@ -1,0 +1,20 @@
+[run]
+branch = True
+parallel = True
+concurrency = multiprocessing,thread
+omit =
+    */__init__.py
+    */_version.py
+    */__pycache__/*
+    */numba_cache/*
+    */stencil/*
+    */tests/*
+    *setup.py
+    finitewave/tools/*
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    if self\.debug
+    if __name__ == .__main__.:

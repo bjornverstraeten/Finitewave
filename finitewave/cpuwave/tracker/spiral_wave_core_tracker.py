@@ -1,25 +1,35 @@
 from pathlib import Path
-import csv
-import numpy as np
-
-try:
-    import pandas as pd
-except ImportError:
-    pd = None
-
+from math import sqrt
 from numba import njit
 from numba.typed import List
+
 from finitewave.core.tracker.tracker import Tracker
 
 
 class SpiralWaveCoreTracker(Tracker):
+    """
+    A class to track spiral wave tips in a cardiac tissue model.
+
+    This tracker identifies and records the positions of spiral wave tips by
+    analyzing voltage isoline crossings in the simulated grid over time.
+
+    Attributes
+    ----------
+    threshold : float
+        Voltage threshold value for detecting spiral tips.
+    file_name : str
+        Name of the file to save the tracked spiral tip data.
+    spiral_wave_cores : list of pd.DataFrame
+        List of tracked spiral core data.
+    """
 
     def __init__(self):
         super().__init__()
         self.threshold = 0.5
         self.file_name = "spiral_wave_core"
         self.spiral_wave_cores = []
-        self.delta = 5
+        self.delta = 5  # boundary margin
+
         self.u_prev = None
         self._ndim = None
 
@@ -36,51 +46,59 @@ class SpiralWaveCoreTracker(Tracker):
         return list(_track_tip_line(u, u_new, threshold, self.delta))
 
     def _track(self):
-        t = float(self.model.t)
-        step = int(self.model.step)
+        try:
+            import pandas as pd
+        except ImportError as e:
+            raise ImportError(
+                "SpiralWaveCoreTracker requires pandas.\n\n"
+                "Install one of the following:\n"
+                "  • pip install finitewave\n"
+                "  • pip install pandas\n"
+            ) from e
 
         if self._ndim == 2:
             tips = self.track_tip_line(self.u_prev, self.model.u, self.threshold)
-            for x, y in tips:
-                self.spiral_wave_cores.append((int(x), int(y), t, step))
+            df = pd.DataFrame(tips, columns=["x", "y"])
+            df["time"] = self.model.t
+            df["step"] = self.model.step
+            self.spiral_wave_cores.append(df)
 
-        else:
+        else:  # 3D
             nz = self.model.u.shape[2]
             for k in range(nz):
                 u_prev = self.u_prev[:, :, k]
                 u = self.model.u[:, :, k]
                 tips = self.track_tip_line(u_prev, u, self.threshold)
-                for x, y in tips:
-                    self.spiral_wave_cores.append((int(x), int(y), int(k), t, step))
+
+                df = pd.DataFrame(tips, columns=["x", "y"])
+                df["z"] = k
+                df["time"] = self.model.t
+                df["step"] = self.model.step
+                self.spiral_wave_cores.append(df)
 
         self.u_prev = self.model.u.copy()
 
     @property
     def output(self):
-        cols = ["x", "y", "time", "step"] if self._ndim == 2 else ["x", "y", "z", "time", "step"]
+        try:
+            import pandas as pd
+        except ImportError as e:
+            raise ImportError(
+                "SpiralWaveCoreTracker requires pandas.\n\n"
+                "Install one of the following:\n"
+                "  • pip install finitewave\n"
+                "  • pip install pandas\n"
+            ) from e
 
-        if not self.spiral_wave_cores:
-            if pd is not None:
-                return pd.DataFrame(columns=cols)
-            return np.empty((0, len(cols)))
-
-        if pd is not None:
-            return pd.DataFrame(self.spiral_wave_cores, columns=cols)
-
-        return np.asarray(self.spiral_wave_cores)
+        validated = [df for df in self.spiral_wave_cores if not df.empty]
+        if not validated:
+            cols = ["x", "y", "time", "step"] if self._ndim == 2 else ["x", "y", "z", "time", "step"]
+            return pd.DataFrame(columns=cols)
+        return pd.concat(validated, ignore_index=True)
 
     def write(self):
-        out_path = Path(self.path, self.file_name).with_suffix(".csv")
-        cols = ["x", "y", "time", "step"] if self._ndim == 2 else ["x", "y", "z", "time", "step"]
+        self.output.to_csv(Path(self.path, self.file_name).with_suffix(".csv"), index=False)
 
-        if pd is not None:
-            self.output.to_csv(out_path, index=False)
-            return
-
-        with out_path.open("w", newline="") as f:
-            writer = csv.writer(f)
-            writer.writerow(cols)
-            writer.writerows(self.spiral_wave_cores)
 
 @njit
 def _correct_tip_pos(i, j, u, u_new, threshold):
