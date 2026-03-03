@@ -45,7 +45,6 @@ Applications:
 - Foundation for further patient-specific modeling or ECG computation
 """
 
-
 from pathlib import Path
 import numpy as np
 

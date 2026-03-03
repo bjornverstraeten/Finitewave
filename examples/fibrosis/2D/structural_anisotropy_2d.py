@@ -46,7 +46,6 @@ This example is useful for exploring:
 
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
 import finitewave as fw
 

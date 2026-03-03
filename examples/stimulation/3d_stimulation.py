@@ -25,8 +25,6 @@ Application:
 """
 
 import numpy as np
-import matplotlib.pyplot as plt
-import pyvista as pv
 import finitewave as fw
 
 # tissue setup

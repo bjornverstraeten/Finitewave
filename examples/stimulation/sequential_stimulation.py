@@ -37,9 +37,7 @@ This setup is ideal for:
 
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
-
 import finitewave as fw
 
 # set up the tissue:

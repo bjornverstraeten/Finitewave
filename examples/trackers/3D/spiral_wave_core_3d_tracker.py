@@ -49,7 +49,6 @@ This tracker provides sparse detection (once every `step`), and is best used
 to observe long-term scroll wave motion rather than high-frequency detail.
 """
 
-
 import matplotlib.pyplot as plt
 import numpy as np
 

@@ -40,8 +40,6 @@ An `.mp4` animation file in the `anim_data` folder, showing how `u` evolves
 over time in the 3D domain.
 """
 
-import numpy as np
-
 import finitewave as fw
 
 # set up the tissue:

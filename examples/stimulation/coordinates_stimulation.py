@@ -1,3 +1,31 @@
+"""
+Coordinates Stimulation
+==================================
+
+Overview:
+---------
+This example demonstrates how to apply a coordinate-based voltage stimulus in a 2D cardiac tissue
+
+Stimulation Setup:
+------------------
+- The `StimVoltageCoord` class is used to define the stimulated region by its coordinates.
+- A square region (10×10 nodes) at the top-left corner of the tissue is stimulated at t = 0.
+- The voltage value is set to 1.0, which for the Aliev-Panfilov model corresponds to the peak excitation potential (resting = 0, peak = 1).
+
+Simulation Parameters:
+----------------------
+- Model: Aliev-Panfilov 2D
+- Grid size: 200 × 200
+- Time step (dt): 0.01 
+- Space step (dr): 0.25
+- Total simulation time: 10 
+
+Application:
+This example is useful for learning how to define spatially localized voltage stimuli in 2D using coordinate-based methods. 
+The `StimVoltageCoord` class is particularly useful for applying custom rectangular stimulation zones, making it ideal for 
+simulating scenarios like localized pacing or focal arrhythmia initiation.
+"""
+
 import matplotlib.pyplot as plt
 
 import finitewave as fw

@@ -29,9 +29,7 @@ stimuli in 2D using coordinate-based methods. The `StimVoltageCoord2D` class
 is particularly useful for applying custom rectangular stimulation zones.
 """
 
-
 import matplotlib.pyplot as plt
-
 import finitewave as fw
 
 # set up the tissue:

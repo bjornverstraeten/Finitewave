@@ -36,10 +36,6 @@ To visualize the result, refer to the generated animation (e.g.,
 
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-import shutil
-
 import finitewave as fw
 
 # number of nodes on the side

@@ -39,13 +39,6 @@ class SpiralWaveCoreTracker(Tracker):
         self._ndim = self.model.u.ndim
         self.spiral_wave_cores = []
 
-        if self._ndim not in (2, 3):
-            raise ValueError(f"Unsupported model.u.ndim={self._ndim}; expected 2 or 3.")
-
-    def track_tip_line(self, u, u_new, threshold):
-        return list(_track_tip_line(u, u_new, threshold, self.delta))
-
-    def _track(self):
         try:
             import pandas as pd
         except ImportError as e:
@@ -55,6 +48,17 @@ class SpiralWaveCoreTracker(Tracker):
                 "  • pip install finitewave\n"
                 "  • pip install pandas\n"
             ) from e
+
+        self._pd = pd
+
+        if self._ndim not in (2, 3):
+            raise ValueError(f"Unsupported model.u.ndim={self._ndim}; expected 2 or 3.")
+
+    def track_tip_line(self, u, u_new, threshold):
+        return list(_track_tip_line(u, u_new, threshold, self.delta))
+
+    def _track(self):
+        pd = self._pd
 
         if self._ndim == 2:
             tips = self.track_tip_line(self.u_prev, self.model.u, self.threshold)
@@ -80,15 +84,7 @@ class SpiralWaveCoreTracker(Tracker):
 
     @property
     def output(self):
-        try:
-            import pandas as pd
-        except ImportError as e:
-            raise ImportError(
-                "SpiralWaveCoreTracker requires pandas.\n\n"
-                "Install one of the following:\n"
-                "  • pip install finitewave\n"
-                "  • pip install pandas\n"
-            ) from e
+        pd = self._pd
 
         validated = [df for df in self.spiral_wave_cores if not df.empty]
         if not validated:

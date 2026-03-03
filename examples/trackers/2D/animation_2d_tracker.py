@@ -50,8 +50,6 @@ It shows the evolution of the transmembrane potential over time in the tissue.
 
 """
 
-import numpy as np
-
 import finitewave as fw
 
 # set up the tissue:

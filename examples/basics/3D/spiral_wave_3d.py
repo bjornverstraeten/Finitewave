@@ -50,7 +50,6 @@ Applications:
 - Modeling electrical activity in simplified anatomical geometries
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
 
 import finitewave as fw
