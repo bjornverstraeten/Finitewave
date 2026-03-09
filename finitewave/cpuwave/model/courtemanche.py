@@ -32,14 +32,13 @@ class CourtemancheKernel(IonicKernelGenerator):
             "oa", "oi", "ua", "ui", "xr", "xs", "d", "f", "fca",
             "urel", "vrel", "wrel", "irel",
             "caup", "carel",
-            "nao", "ko", "cao", "R", "T", "F",
+            "nao", "ko", "cao", "R", "T", "F", "Cm",
             "gna", "gk1", "gto", "gcal", "gnab", "gcab",
             "gkr", "gks", "inakmax", "kmnai", "kmko",
             "inacamax", "kmnancx", "kmcancx", "ksatncx",
             "ipcamax", "iupmax", "kup", "caupmax",
             "krel", "Vrel", "Vup", "Vj",
-            "kq10", "gkur_coeff",
-            "ibk",
+            "kq10", "ibk",
             "trpnmax", "kmtrpn", "cmdnmax", "kmcmdn",
             "csqnmax", "kmcsqn",
         ]
@@ -65,37 +64,37 @@ class CourtemancheKernel(IonicKernelGenerator):
         {model['j']} = calc_gating_j({model['j']}, u_loc, dt)
 
         # Currents
-        ina = calc_ina(u_loc, {model['m']}, {model['h']}, {model['j']}, {model['gna']}, ena)
-        ik1 = calc_ik1(u_loc, {model['gk1']}, ek)
+        ina = calc_ina(u_loc, {model['m']}, {model['h']}, {model['j']}, {model['gna']}, ena, {model['Cm']})
+        ik1 = calc_ik1(u_loc, {model['gk1']}, ek, {model['Cm']})
 
         ito, {model['oa']}, {model['oi']} = calc_ito(
-            u_loc, dt, {model['kq10']}, {model['oa']}, {model['oi']}, {model['gto']}, ek
+            u_loc, dt, {model['kq10']}, {model['oa']}, {model['oi']}, {model['gto']}, ek, {model['Cm']}
         )
         ikur, {model['ua']}, {model['ui']} = calc_ikur(
-            u_loc, dt, {model['kq10']}, {model['ua']}, {model['ui']}, ek, {model['gkur_coeff']}
+            u_loc, dt, {model['kq10']}, {model['ua']}, {model['ui']}, ek, {model['Cm']}
         )
 
-        ikr, {model['xr']} = calc_ikr(u_loc, dt, {model['xr']}, {model['gkr']}, ek)
-        iks, {model['xs']} = calc_iks(u_loc, dt, {model['xs']}, {model['gks']}, ek)
+        ikr, {model['xr']} = calc_ikr(u_loc, dt, {model['xr']}, {model['gkr']}, ek, {model['Cm']})
+        iks, {model['xs']} = calc_iks(u_loc, dt, {model['xs']}, {model['gks']}, ek, {model['Cm']})
 
         ical, {model['d']}, {model['f']}, {model['fca']} = calc_ical(
-            u_loc, dt, {model['d']}, {model['f']}, {model['cai']}, {model['gcal']}, {model['fca']}
+            u_loc, dt, {model['d']}, {model['f']}, {model['cai']}, {model['gcal']}, {model['fca']}, {model['Cm']}
         )
 
         inak = calc_inak(
             {model['inakmax']}, {model['nai']}, {model['nao']}, {model['ko']},
             {model['kmnai']}, {model['kmko']},
-            {model['F']}, u_loc, {model['R']}, {model['T']}
+            {model['F']}, u_loc, {model['R']}, {model['T']}, {model['Cm']}
         )
         inaca = calc_inaca(
             {model['inacamax']}, {model['nai']}, {model['nao']}, {model['cai']}, {model['cao']},
             {model['kmnancx']}, {model['kmcancx']}, {model['ksatncx']},
-            {model['F']}, u_loc, {model['R']}, {model['T']}
+            {model['F']}, u_loc, {model['R']}, {model['T']}, {model['Cm']}
         )
 
-        ibca = calc_ibca({model['gcab']}, eca, u_loc)
-        ibna = calc_ibna({model['gnab']}, ena, u_loc)
-        ipca = calc_ipca({model['ipcamax']}, {model['cai']})
+        ibca = calc_ibca({model['gcab']}, eca, u_loc, {model['Cm']})
+        ibna = calc_ibna({model['gnab']}, ena, u_loc, {model['Cm']})
+        ipca = calc_ipca({model['ipcamax']}, {model['cai']}, {model['Cm']})
 
         # SR release / uptake
         {model['irel']}, {model['urel']}, {model['vrel']}, {model['wrel']} = calc_irel(
@@ -130,7 +129,7 @@ class CourtemancheKernel(IonicKernelGenerator):
         # Membrane potential update:
         # in 0D: u += dt * (-rhs + stim)
         # in tissue: stim already applied earlier, so only -rhs here
-        {u_new} += dt * (-calc_rhs(ina, ik1, ito, ikur, ikr, iks, ical, ipca, inak, inaca, ibna, ibca))
+        {u_new} += dt * (-calc_rhs(ina, ik1, ito, ikur, ikr, iks, ical, ipca, inak, inaca, ibna, ibca, {model['Cm']}))
     """
 
 
@@ -198,6 +197,8 @@ class Courtemanche(CardiacModel):
         Absolute temperature in K.
     F : float
         Faraday's constant in C/mol.
+    Cm : float
+        Membrane capacitance in μF/cm².
     gna : float
         Maximum conductance for the fast sodium current in mS/μF.
     gk1 : float
@@ -246,8 +247,6 @@ class Courtemanche(CardiacModel):
         Volume ratio for junctional space.
     kq10 : float
         Temperature coefficient for gating kinetics.
-    gkur_coeff : float
-        Scaling coefficient for the ultrarapid delayed rectifier potassium current (I_kur).
     ibk : float
         Background potassium current in μA/μF.
     trpnmax : float
