@@ -58,7 +58,7 @@ class TenTusscherPanfilov2006Kernel(IonicKernelGenerator):
         {model['h']}, h_inf = calc_gating_h({model['h']}, u_loc, dt)
         {model['j']} = calc_gating_j({model['j']}, h_inf, u_loc, dt)
 
-        ina, {model['m']}, {model['h']}, {model['j']} = calc_ina(
+        ina = calc_ina(
             u_loc, {model['m']}, {model['h']}, {model['j']},
             {model['gna']}, Ena
         )
