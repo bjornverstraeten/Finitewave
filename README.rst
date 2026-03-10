@@ -56,6 +56,21 @@ which allows changes to be immediately reflected without reinstallation:
     $ pip install -e .
 
 
+Tests
+-----
+
+To run the tests for Finitewave, navigate to the root directory of the project and execute:
+
+.. code-block:: bash
+
+    $ pytest tests
+
+Or if you want to run a specific test file:
+
+.. code-block:: bash
+
+    $ pytest tests/test_basics.py
+
 Requirements
 ------------
 
@@ -405,7 +420,12 @@ Finally, we can run the simulation by calling the ``run()`` method of the
     aliev_panfilov.run()
 
     plt.imshow(aliev_panfilov.u, cmap='coolwarm')
-    plt.show()
+    
+    # show or save figure depending on the backend
+    if "agg" in plt.get_backend().lower():
+        plt.savefig("figure.png", dpi=300)
+    else:
+        plt.show()
 
 
 Simplified pipeline
@@ -460,7 +480,12 @@ steps described above:
 
     fig.suptitle("Aliev-Panfilov 2D isotropic")
     plt.tight_layout()
-    plt.show()
+
+    # show or save figure depending on the backend
+    if "agg" in plt.get_backend().lower():
+        plt.savefig("figure.png", dpi=300)
+    else:
+        plt.show()
 
 .. The output should look like this:
 
