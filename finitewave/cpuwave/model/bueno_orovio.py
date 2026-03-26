@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from finitewave.core.model.cardiac_model import CardiacModel

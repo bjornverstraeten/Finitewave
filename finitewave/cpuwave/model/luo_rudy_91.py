@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from finitewave.core.model.cardiac_model import CardiacModel
@@ -29,7 +30,7 @@ class LuoRudy91Kernel(IonicKernelGenerator):
             "u", "m", "h", "j", "d", "f", "x", "cai",
             "gna", "gsi", "gk", "gk1", "gkp", "gb",
             "ko", "ki", "nai", "nao", "cao",
-            "R", "T", "F", "PR_NaK"
+            "R", "T", "F", "E_Na", "E_K1", "PR_NaK"
         ]
 
     def generate_body(self) -> str:
@@ -39,17 +40,14 @@ class LuoRudy91Kernel(IonicKernelGenerator):
         return f"""\
         u_loc = {model['u']}
 
-        E_Na = ({model['R']}*{model['T']}/{model['F']}) * np.log({model['nao']}/{model['nai']})
-        E_K1 = ({model['R']}*{model['T']}/{model['F']}) * np.log({model['ko']}/{model['ki']})
-
-        ina = calc_ina(u_loc, {model['m']}, {model['h']}, {model['j']}, E_Na, {model['gna']})
+        ina = calc_ina(u_loc, {model['m']}, {model['h']}, {model['j']}, {model['E_Na']}, {model['gna']})
         isi = calc_isk(u_loc, {model['d']}, {model['f']}, {model['cai']}, {model['gsi']})
         {model['cai']} += dt * calc_dcai({model['cai']}, isi)
 
         ik  = calc_ik(u_loc, {model['x']}, {model['ko']}, {model['ki']}, {model['nao']}, {model['nai']}, 
             {model['PR_NaK']}, {model['R']}, {model['T']}, {model['F']}, {model['gk']})
-        ik1 = calc_ik1(u_loc, {model['ko']}, E_K1, {model['gk1']})
-        ikp = calc_ikp(u_loc, E_K1, {model['gkp']})
+        ik1 = calc_ik1(u_loc, {model['ko']}, {model['E_K1']}, {model['gk1']})
+        ikp = calc_ikp(u_loc, {model['E_K1']}, {model['gkp']})
         ib  = calc_ib(u_loc, {model['gb']})
 
         {u_new} += dt * calc_rhs(ina, isi, ik, ik1, ikp, ib)
@@ -135,10 +133,9 @@ class LuoRudy91(CardiacModel):
     
         self._allocate_state_arrays()
     
-        gen = self._initialize_kernel(LuoRudy91Kernel, exclude_params=["E_Na", "E_K1"])
+        gen = self._initialize_kernel(LuoRudy91Kernel)
     
         glb = {
-            "np": np,
             "calc_dm": jit_ops["calc_dm"],
             "calc_dh": jit_ops["calc_dh"],
             "calc_dj": jit_ops["calc_dj"],

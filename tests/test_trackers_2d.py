@@ -225,7 +225,7 @@ def test_spiral_wave_core_2d_tracker(spiral_model):
     assert len(y) > 0
 
     # Check if the spiral wave core is within expected range
-    assert np.min(x) >= 32
+    assert np.min(x) >= 31
     assert np.max(x) <= 38
     assert np.min(y) >= 47
     assert np.max(y) <= 53

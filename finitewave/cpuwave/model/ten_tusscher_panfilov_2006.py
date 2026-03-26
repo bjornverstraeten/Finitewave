@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from finitewave.core.model.cardiac_model import CardiacModel
@@ -39,7 +40,7 @@ class TenTusscherPanfilov2006Kernel(IonicKernelGenerator):
         u_new = f"u_new{self._raw_indexing()}"
 
         return f"""\
-         inverseVcF2 = 1.0 / (2 * {model['Vc']} * {model['F']})
+        inverseVcF2 = 1.0 / (2 * {model['Vc']} * {model['F']})
         inverseVcF = 1.0 / ({model['Vc']} * {model['F']})
         inversevssF2 = 1.0 / (2 * {model['Vss']} * {model['F']})
 
@@ -243,15 +244,6 @@ class TenTusscherPanfilov2006Kernel(IonicKernelGenerator):
             inverseVcF, {model['CAPACITANCE']}
         )
 
-        du = -calc_rhs(
-            ikr, iks,
-            ik1, ito,
-            ina, ibna,
-            ical, ibca,
-            inak, inaca,
-            ipca, ipk
-        )
-
         # Commit new state
         {model['m']} = m_new
         {model['h']} = h_new
@@ -277,7 +269,14 @@ class TenTusscherPanfilov2006Kernel(IonicKernelGenerator):
         {model['nai']} = nai_old + dt * dnai
         {model['Ki']} = ki_old + dt * dki
 
-        {model['u_new']} = u_old + dt * du
+        {u_new} = {u_new} + dt * -calc_rhs(
+            ikr, iks,
+            ik1, ito,
+            ina, ibna,
+            ical, ibca,
+            inak, inaca,
+            ipca, ipk
+        )
 """
 
 
@@ -384,7 +383,6 @@ class TenTusscherPanfilov2006(CardiacModel):
         gen = self._initialize_kernel(TenTusscherPanfilov2006Kernel)
 
         glb = {
-            "np": np,
             "calc_gating_variable_rush_larsen": jit_ops["calc_gating_variable_rush_larsen"],
             "calc_Ek": jit_ops["calc_Ek"],
             "calc_Ena": jit_ops["calc_Ena"],
@@ -414,6 +412,8 @@ class TenTusscherPanfilov2006(CardiacModel):
             "calc_tau_xr2": jit_ops["calc_tau_xr2"],
             "calc_xs_inf": jit_ops["calc_xs_inf"],
             "calc_tau_xs": jit_ops["calc_tau_xs"],
+            "calc_ina": jit_ops["calc_ina"],
+            "calc_ito": jit_ops["calc_ito"],
             "calc_ikr": jit_ops["calc_ikr"],
             "calc_iks": jit_ops["calc_iks"],
             "calc_ik1": jit_ops["calc_ik1"],

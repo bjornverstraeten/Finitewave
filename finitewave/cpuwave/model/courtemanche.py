@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 from finitewave.core.model.cardiac_model import CardiacModel
@@ -252,19 +253,6 @@ class CourtemancheKernel(IonicKernelGenerator):
             {model['csqnmax']}, {model['kmcsqn']}
         )
 
-        du = -calc_rhs(
-            ina, ik1, ito, ikur, ikr, iks,
-            ical, ipca, inak, inaca, ibna, ibca,
-            {model['Cm']}
-        )
-
-        caup_new = caup_old + dt * dcaup
-        nai_new = nai_old + dt * dnai
-        ki_new = ki_old + dt * dki
-        cai_new = cai_old + dt * dcai
-        carel_new = carel_old + dt * dcarel
-        u_new = u_old + dt * du
-
         {model['m']} = m_new
         {model['h']} = h_new
         {model['j']} = j_new
@@ -285,13 +273,17 @@ class CourtemancheKernel(IonicKernelGenerator):
         {model['irel']} = irel_new
         {model['wrel']} = wrel_new
 
-        {model['caup']} = caup_new
-        {model['nai']} = nai_new
-        {model['ki']} = ki_new
-        {model['cai']} = cai_new
-        {model['carel']} = carel_new
+        {model['caup']} = caup_old + dt * dcaup
+        {model['nai']} = nai_old + dt * dnai
+        {model['ki']} = ki_old + dt * dki
+        {model['cai']} = cai_old + dt * dcai
+        {model['carel']} = carel_old + dt * dcarel
 
-        {model['u_new']} = u_new
+        {u_new} = {u_new} + dt * -calc_rhs(
+            ina, ik1, ito, ikur, ikr, iks,
+            ical, ipca, inak, inaca, ibna, ibca,
+            {model['Cm']}
+        )
     """
 
 
@@ -447,7 +439,6 @@ class Courtemanche(CardiacModel):
         gen = self._initialize_kernel(CourtemancheKernel)
     
         glb = {
-            "np": np,
             "calc_gating_variable_rush_larsen": jit_ops["calc_gating_variable_rush_larsen"],
             "calc_ena": jit_ops["calc_ena"],
             "calc_ek": jit_ops["calc_ek"],
@@ -478,6 +469,12 @@ class Courtemanche(CardiacModel):
             "calc_f_inf": jit_ops["calc_f_inf"],
             "calc_tau_fca": jit_ops["calc_tau_fca"],
             "calc_fca_inf": jit_ops["calc_fca_inf"],
+            "calc_ina": jit_ops["calc_ina"],
+            "calc_ik1": jit_ops["calc_ik1"],
+            "calc_ito": jit_ops["calc_ito"],
+            "calc_ikur": jit_ops["calc_ikur"],
+            "calc_ikr": jit_ops["calc_ikr"],
+            "calc_iks": jit_ops["calc_iks"],
             "calc_ical": jit_ops["calc_ical"],
             "calc_inak": jit_ops["calc_inak"],
             "calc_inaca": jit_ops["calc_inaca"],
