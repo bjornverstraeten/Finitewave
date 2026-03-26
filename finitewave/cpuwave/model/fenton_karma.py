@@ -43,12 +43,6 @@ class FentonKarmaKernel(IonicKernelGenerator):
         u_new = f"u_new{self._raw_indexing()}"
         
         return f"""\
-
-        {model['v']} += dt * calc_dv({model['v']} , {model['u']} , 
-                                          {model['u_c']} , {model['tau_v_m']} , {model['tau_v_p']} )
-        {model['w']}  += dt * calc_dw({model['w']} , {model['u']} , 
-                                          {model['u_c']} , {model['tau_w_m']} , {model['tau_w_p']})
-        
         J_fi = calc_Jfi({model['u']}, {model['v']}, 
                             {model['u_c']}, {model['tau_d']})
         J_so = calc_Jso({model['u']}, {model['u_c']},
@@ -57,6 +51,11 @@ class FentonKarmaKernel(IonicKernelGenerator):
                             {model['k']}, {model['uc_si']}, {model['tau_si']})
 
         {u_new} += dt * calc_rhs(J_fi, J_so, J_si)
+
+        {model['v']} += dt * calc_dv({model['v']} , {model['u']} , 
+                                          {model['u_c']} , {model['tau_v_m']} , {model['tau_v_p']} )
+        {model['w']}  += dt * calc_dw({model['w']} , {model['u']} , 
+                                          {model['u_c']} , {model['tau_w_m']} , {model['tau_w_p']})
 
 """
 

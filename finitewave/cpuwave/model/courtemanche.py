@@ -48,88 +48,250 @@ class CourtemancheKernel(IonicKernelGenerator):
         u_new = f"u_new{self._raw_indexing()}"
 
         return f"""\
-        u_loc = {model['u']}
+        u_old = {model['u']}
+        m_old = {model['m']}
+        h_old = {model['h']}
+        j_old = {model['j']}
 
-        # Equilibrium potentials
-        ena, ek, eca = calc_equilibrum_potentials(
-            {model['nai']}, {model['nao']},
-            {model['ki']}, {model['ko']},
-            {model['cai']}, {model['cao']},
-            {model['R']}, {model['T']}, {model['F']}
+        oa_old = {model['oa']}
+        oi_old = {model['oi']}
+        ua_old = {model['ua']}
+        ui_old = {model['ui']}
+        xr_old = {model['xr']}
+        xs_old = {model['xs']}
+
+        d_old = {model['d']}
+        f_old = {model['f']}
+        fca_old = {model['fca']}
+
+        urel_old = {model['urel']}
+        vrel_old = {model['vrel']}
+        irel_old = {model['irel']}
+        wrel_old = {model['wrel']}
+
+        caup_old = {model['caup']}
+        carel_old = {model['carel']}
+        cai_old = {model['cai']}
+        nai_old = {model['nai']}
+        ki_old = {model['ki']}
+
+
+        ena = calc_ena(nai_old, {model['nao']}, {model['R']}, {model['T']}, {model['F']})
+        ek = calc_ek(ki_old, {model['ko']}, {model['R']}, {model['T']}, {model['F']})
+        eca = calc_eca(cai_old, {model['cao']}, {model['R']}, {model['T']}, {model['F']})
+
+        am = calc_am(u_old)
+        bm = calc_bm(u_old)
+        tau_m = calc_tau(am, bm)
+        m_inf = calc_inf(am, bm)
+        m_new = calc_gating_variable_rush_larsen(m_old, m_inf, tau_m, dt)
+
+        ah = calc_ah(u_old)
+        bh = calc_bh(u_old) 
+        tau_h = calc_tau(ah, bh)
+        h_inf = calc_inf(ah, bh)
+        h_new = calc_gating_variable_rush_larsen(h_old, h_inf, tau_h, dt)
+
+        aj = calc_aj(u_old)
+        bj = calc_bj(u_old)
+        tau_j = calc_tau(aj, bj)
+        j_inf = calc_inf(aj, bj)
+        j_new = calc_gating_variable_rush_larsen(j_old, j_inf, tau_j, dt)
+
+        ina = calc_ina(
+            u_old, m_old, h_old, j_old,
+            {model['gna']}, ena, {model['Cm']}
         )
 
-        # Fast Na gating
-        {model['m']} = calc_gating_m({model['m']}, u_loc, dt)
-        {model['h']} = calc_gating_h({model['h']}, u_loc, dt)
-        {model['j']} = calc_gating_j({model['j']}, u_loc, dt)
-
-        # Currents
-        ina = calc_ina(u_loc, {model['m']}, {model['h']}, {model['j']}, {model['gna']}, ena, {model['Cm']})
-        ik1 = calc_ik1(u_loc, {model['gk1']}, ek, {model['Cm']})
-
-        ito, {model['oa']}, {model['oi']} = calc_ito(
-            u_loc, dt, {model['kq10']}, {model['oa']}, {model['oi']}, {model['gto']}, ek, {model['Cm']}
-        )
-        ikur, {model['ua']}, {model['ui']} = calc_ikur(
-            u_loc, dt, {model['kq10']}, {model['ua']}, {model['ui']}, ek, {model['Cm']}
+        ik1 = calc_ik1(
+            u_old, {model['gk1']}, ek, {model['Cm']}
         )
 
-        ikr, {model['xr']} = calc_ikr(u_loc, dt, {model['xr']}, {model['gkr']}, ek, {model['Cm']})
-        iks, {model['xs']} = calc_iks(u_loc, dt, {model['xs']}, {model['gks']}, ek, {model['Cm']})
+        tau_oa = calc_tau_oa(u_old, {model['kq10']})
+        oa_inf = calc_oa_inf(u_old)
+        oa_new = calc_gating_variable_rush_larsen(oa_old, oa_inf, tau_oa, dt)
 
-        ical, {model['d']}, {model['f']}, {model['fca']} = calc_ical(
-            u_loc, dt, {model['d']}, {model['f']}, {model['cai']}, {model['gcal']}, {model['fca']}, {model['Cm']}
+        tau_oi = calc_tau_oi(u_old, {model['kq10']})
+        oi_inf = calc_oi_inf(u_old)
+        oi_new = calc_gating_variable_rush_larsen(oi_old, oi_inf, tau_oi, dt)
+
+        ito = calc_ito(
+            u_old, oa_old, oi_old,
+            {model['gto']}, ek, {model['Cm']}
+        )
+
+        tau_ua = calc_tau_ua(u_old, {model['kq10']})
+        ua_inf = calc_ua_inf(u_old)
+        ua_new = calc_gating_variable_rush_larsen(ua_old, ua_inf, tau_ua, dt)
+
+        tau_ui = calc_tau_ui(u_old, {model['kq10']})
+        ui_inf = calc_ui_inf(u_old)
+        ui_new = calc_gating_variable_rush_larsen(ui_old, ui_inf, tau_ui, dt)
+
+        ikur = calc_ikur(
+            u_old, ua_old, ui_old,
+            ek, {model['Cm']}
+        )
+
+        tau_xr = calc_tau_xr(u_old)
+        xr_inf = calc_xr_inf(u_old)
+        xr_new = calc_gating_variable_rush_larsen(xr_old, xr_inf, tau_xr, dt)
+
+        ikr = calc_ikr(
+            u_old, xr_old,
+            {model['gkr']}, ek, {model['Cm']}
+        )
+
+        tau_xs = calc_tau_xs(u_old)
+        xs_inf = calc_xs_inf(u_old)
+        xs_new = calc_gating_variable_rush_larsen(xs_old, xs_inf, tau_xs, dt)
+
+        iks = calc_iks(
+            u_old, xs_old,
+            {model['gks']}, ek, {model['Cm']}
+        )
+
+        tau_d = calc_tau_d(u_old)
+        d_inf = calc_d_inf(u_old)
+        d_new = calc_gating_variable_rush_larsen(d_old, d_inf, tau_d, dt)
+
+        tau_f = calc_tau_f(u_old)
+        f_inf = calc_f_inf(u_old)
+        f_new = calc_gating_variable_rush_larsen(f_old, f_inf, tau_f, dt)
+
+        tau_fca = calc_tau_fca()
+        fca_inf = calc_fca_inf(cai_old)
+        fca_new = calc_gating_variable_rush_larsen(fca_old, fca_inf, tau_fca, dt)
+
+        ical = calc_ical(
+            u_old, d_old, f_old,
+            {model['gcal']}, fca_old, {model['Cm']}
         )
 
         inak = calc_inak(
-            {model['inakmax']}, {model['nai']}, {model['nao']}, {model['ko']},
-            {model['kmnai']}, {model['kmko']},
-            {model['F']}, u_loc, {model['R']}, {model['T']}, {model['Cm']}
+            {model['inakmax']},
+            nai_old, {model['nao']},
+            {model['ko']}, {model['kmnai']},
+            {model['kmko']}, {model['F']},
+            u_old, {model['R']}, {model['T']},
+            {model['Cm']}
         )
+
         inaca = calc_inaca(
-            {model['inacamax']}, {model['nai']}, {model['nao']}, {model['cai']}, {model['cao']},
-            {model['kmnancx']}, {model['kmcancx']}, {model['ksatncx']},
-            {model['F']}, u_loc, {model['R']}, {model['T']}, {model['Cm']}
+            {model['inacamax']},
+            nai_old, {model['nao']},
+            cai_old, {model['cao']},
+            {model['kmnancx']}, {model['kmcancx']},
+            {model['ksatncx']}, {model['F']},
+            u_old, {model['R']}, {model['T']},
+            {model['Cm']}
         )
 
-        ibca = calc_ibca({model['gcab']}, eca, u_loc, {model['Cm']})
-        ibna = calc_ibna({model['gnab']}, ena, u_loc, {model['Cm']})
-        ipca = calc_ipca({model['ipcamax']}, {model['cai']}, {model['Cm']})
-
-        # SR release / uptake
-        {model['irel']}, {model['urel']}, {model['vrel']}, {model['wrel']} = calc_irel(
-            dt,
-            {model['urel']}, {model['vrel']}, {model['irel']}, {model['wrel']},
-            ical, inaca,
-            {model['krel']}, {model['carel']}, {model['cai']}, u_loc,
-            {model['F']}, {model['Vrel']}
+        ibca = calc_ibca(
+            {model['gcab']}, eca, u_old, {model['Cm']}
         )
 
-        itr = calc_itr({model['caup']}, {model['carel']})
-        iup = calc_iup({model['iupmax']}, {model['cai']}, {model['kup']})
-        iupleak = calc_iupleak({model['caup']}, {model['caupmax']}, {model['iupmax']})
+        ibna = calc_ibna(
+            {model['gnab']}, ena, u_old, {model['Cm']}
+        )
 
-        # Concentrations / buffers
-        {model['caup']} += dt * calc_dcaup(iup, iupleak, itr, {model['Vrel']}, {model['Vup']})
-        {model['nai']}  += dt * calc_dnai(inak, inaca, ibna, ina, {model['F']}, {model['Vj']})
-        {model['ki']}   += dt * calc_dki(inak, ik1, ito, ikur, ikr, iks, {model['ibk']}, {model['F']}, {model['Vj']})
+        ipca = calc_ipca(
+            {model['ipcamax']}, cai_old, {model['Cm']}
+        )
 
-        {model['cai']}  += dt * calc_dcai(
-            {model['cai']}, inaca, ipca, ical, ibca, iup, iupleak, {model['irel']},
+        Fn = calc_Fn(irel_old, ical, inaca, {model['F']}, {model['Vrel']})
+
+        tau_urel = calc_tau_urel()
+        urel_inf = calc_urel_inf(Fn)
+        urel_new = calc_gating_variable_rush_larsen(urel_old, urel_inf, tau_urel, dt)
+
+        tau_vrel = calc_tau_vrel(Fn)
+        vrel_inf = calc_vrel_inf(Fn)
+        vrel_new = calc_gating_variable_rush_larsen(vrel_old, vrel_inf, tau_vrel, dt)
+
+        tau_wrel = calc_tau_wrel(u_old)
+        wrel_inf = calc_wrel_inf(u_old)
+        wrel_new = calc_gating_variable_rush_larsen(wrel_old, wrel_inf, tau_wrel, dt)
+
+        irel_new = calc_irel(
+            urel_old, vrel_old, irel_old, wrel_old,
+            {model['krel']},
+            carel_old, cai_old
+        )
+
+        itr = calc_itr(caup_old, carel_old)
+        iup = calc_iup({model['iupmax']}, cai_old, {model['kup']})
+        iupleak = calc_iupleak(caup_old, {model['caupmax']}, {model['iupmax']})
+
+        dcaup = calc_dcaup(
+            iup, iupleak, itr,
+            {model['Vrel']}, {model['Vup']}
+        )
+
+        dnai = calc_dnai(
+            inak, inaca, ibna, ina,
+            {model['F']}, {model['Vj']}
+        )
+
+        dki = calc_dki(
+            inak, ik1, ito, ikur, ikr, iks,
+            {model['ibk']}, {model['F']}, {model['Vj']}
+        )
+
+        dcai = calc_dcai(
+            cai_old, inaca, ipca, ical, ibca,
+            iup, iupleak, irel_old,
             {model['Vrel']}, {model['Vup']},
             {model['trpnmax']}, {model['kmtrpn']},
             {model['cmdnmax']}, {model['kmcmdn']},
             {model['F']}, {model['Vj']}
         )
 
-        {model['carel']} += dt * calc_dcarel(
-            {model['carel']}, itr, {model['irel']}, {model['csqnmax']}, {model['kmcsqn']}
+        dcarel = calc_dcarel(
+            carel_old, itr, irel_old,
+            {model['csqnmax']}, {model['kmcsqn']}
         )
 
-        # Membrane potential update:
-        # in 0D: u += dt * (-rhs + stim)
-        # in tissue: stim already applied earlier, so only -rhs here
-        {u_new} += dt * (-calc_rhs(ina, ik1, ito, ikur, ikr, iks, ical, ipca, inak, inaca, ibna, ibca, {model['Cm']}))
+        du = -calc_rhs(
+            ina, ik1, ito, ikur, ikr, iks,
+            ical, ipca, inak, inaca, ibna, ibca,
+            {model['Cm']}
+        )
+
+        caup_new = caup_old + dt * dcaup
+        nai_new = nai_old + dt * dnai
+        ki_new = ki_old + dt * dki
+        cai_new = cai_old + dt * dcai
+        carel_new = carel_old + dt * dcarel
+        u_new = u_old + dt * du
+
+        {model['m']} = m_new
+        {model['h']} = h_new
+        {model['j']} = j_new
+
+        {model['oa']} = oa_new
+        {model['oi']} = oi_new
+        {model['ua']} = ua_new
+        {model['ui']} = ui_new
+        {model['xr']} = xr_new
+        {model['xs']} = xs_new
+
+        {model['d']} = d_new
+        {model['f']} = f_new
+        {model['fca']} = fca_new
+
+        {model['urel']} = urel_new
+        {model['vrel']} = vrel_new
+        {model['irel']} = irel_new
+        {model['wrel']} = wrel_new
+
+        {model['caup']} = caup_new
+        {model['nai']} = nai_new
+        {model['ki']} = ki_new
+        {model['cai']} = cai_new
+        {model['carel']} = carel_new
+
+        {model['u_new']} = u_new
     """
 
 
@@ -286,22 +448,49 @@ class Courtemanche(CardiacModel):
     
         glb = {
             "np": np,
-            "calc_equilibrum_potentials": jit_ops["calc_equilibrum_potentials"],
-            "calc_gating_m": jit_ops["calc_gating_m"],
-            "calc_gating_h": jit_ops["calc_gating_h"],
-            "calc_gating_j": jit_ops["calc_gating_j"],
-            "calc_ina": jit_ops["calc_ina"],
-            "calc_ik1": jit_ops["calc_ik1"],
-            "calc_ito": jit_ops["calc_ito"],
-            "calc_ikur": jit_ops["calc_ikur"],
-            "calc_ikr": jit_ops["calc_ikr"],
-            "calc_iks": jit_ops["calc_iks"],
+            "calc_gating_variable_rush_larsen": jit_ops["calc_gating_variable_rush_larsen"],
+            "calc_ena": jit_ops["calc_ena"],
+            "calc_ek": jit_ops["calc_ek"],
+            "calc_eca": jit_ops["calc_eca"],
+            "calc_am": jit_ops["calc_am"],
+            "calc_bm": jit_ops["calc_bm"],
+            "calc_tau": jit_ops["calc_tau"],
+            "calc_inf": jit_ops["calc_inf"],
+            "calc_ah": jit_ops["calc_ah"],
+            "calc_bh": jit_ops["calc_bh"],
+            "calc_aj": jit_ops["calc_aj"],
+            "calc_bj": jit_ops["calc_bj"],
+            "calc_tau_oa": jit_ops["calc_tau_oa"],
+            "calc_oa_inf": jit_ops["calc_oa_inf"],
+            "calc_tau_oi": jit_ops["calc_tau_oi"],
+            "calc_oi_inf": jit_ops["calc_oi_inf"],
+            "calc_tau_ua": jit_ops["calc_tau_ua"],
+            "calc_ua_inf": jit_ops["calc_ua_inf"],
+            "calc_tau_ui": jit_ops["calc_tau_ui"],
+            "calc_ui_inf": jit_ops["calc_ui_inf"],
+            "calc_tau_xr": jit_ops["calc_tau_xr"],
+            "calc_xr_inf": jit_ops["calc_xr_inf"],
+            "calc_tau_xs": jit_ops["calc_tau_xs"],
+            "calc_xs_inf": jit_ops["calc_xs_inf"],
+            "calc_tau_d": jit_ops["calc_tau_d"],
+            "calc_d_inf": jit_ops["calc_d_inf"],
+            "calc_tau_f": jit_ops["calc_tau_f"],
+            "calc_f_inf": jit_ops["calc_f_inf"],
+            "calc_tau_fca": jit_ops["calc_tau_fca"],
+            "calc_fca_inf": jit_ops["calc_fca_inf"],
             "calc_ical": jit_ops["calc_ical"],
             "calc_inak": jit_ops["calc_inak"],
             "calc_inaca": jit_ops["calc_inaca"],
             "calc_ibca": jit_ops["calc_ibca"],
             "calc_ibna": jit_ops["calc_ibna"],
             "calc_ipca": jit_ops["calc_ipca"],
+            "calc_Fn": jit_ops["calc_Fn"],
+            "calc_tau_urel": jit_ops["calc_tau_urel"],
+            "calc_urel_inf": jit_ops["calc_urel_inf"],
+            "calc_tau_vrel": jit_ops["calc_tau_vrel"],
+            "calc_vrel_inf": jit_ops["calc_vrel_inf"],
+            "calc_tau_wrel": jit_ops["calc_tau_wrel"],
+            "calc_wrel_inf": jit_ops["calc_wrel_inf"],
             "calc_irel": jit_ops["calc_irel"],
             "calc_itr": jit_ops["calc_itr"],
             "calc_iup": jit_ops["calc_iup"],
@@ -310,7 +499,7 @@ class Courtemanche(CardiacModel):
             "calc_dnai": jit_ops["calc_dnai"],
             "calc_dki": jit_ops["calc_dki"],
             "calc_dcai": jit_ops["calc_dcai"],
-            "calc_dcarel": jit_ops["calc_dcarel"],
+            "calc_dcarel": jit_ops["calc_dcarel"],           
             "calc_rhs": jit_ops["calc_rhs"],
         }
 

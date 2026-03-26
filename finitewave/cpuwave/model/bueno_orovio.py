@@ -45,6 +45,19 @@ class BuenoOrovioKernel(IonicKernelGenerator):
         u_new = f"u_new{self._raw_indexing()}"
         
         return f"""\
+        J_fi = calc_Jfi({model['u']}, {model['v']}, {model['theta_v']}, 
+                            {model['u_u']}, {model['tau_fi']})
+        
+        tau_o = calc_tau_o({model['u']}, {model['tau_o1']}, {model['tau_o2']}, {model['theta_o']})
+        tau_so = calc_tau_so({model['u']}, {model['tau_so1']}, {model['tau_so2']},
+                                    {model['k_so']}, {model['u_so']})
+        J_so = calc_Jso({model['u']}, {model['u_o']}, {model['theta_w']},
+                            tau_o, tau_so)
+
+        J_si = calc_Jsi({model['u']}, {model['w']}, {model['s']}, {model['theta_w']}, {model['tau_si']})
+        
+
+        {u_new} += dt*calc_rhs(J_fi, J_so, J_si)
 
         v_inf = calc_v_inf({model['u']}, {model['theta_v_m']})
         tau_v_m = calc_tau_v_m({model['u']}, {model['theta_v_m']}, 
@@ -61,21 +74,6 @@ class BuenoOrovioKernel(IonicKernelGenerator):
         tau_s = calc_tau_s({model['u']}, {model['tau_s1']}, {model['tau_s2']}, {model['theta_w']})
         {model['s']} += dt*calc_s({model['s']}, {model['u']}, tau_s, 
                          {model['k_s']}, {model['u_s']})
-        
-        J_fi = calc_Jfi({model['u']}, {model['v']}, {model['theta_v']}, 
-                            {model['u_u']}, {model['tau_fi']})
-        
-        tau_o = calc_tau_o({model['u']}, {model['tau_o1']}, {model['tau_o2']}, {model['theta_o']})
-        tau_so = calc_tau_so({model['u']}, {model['tau_so1']}, {model['tau_so2']},
-                                    {model['k_so']}, {model['u_so']})
-        J_so = calc_Jso({model['u']}, {model['u_o']}, {model['theta_w']},
-                            tau_o, tau_so)
-
-        J_si = calc_Jsi({model['u']}, {model['w']}, {model['s']}, {model['theta_w']}, {model['tau_si']})
-        
-
-        {u_new} += dt*calc_rhs(J_fi, J_so, J_si)
-
 
 """
 

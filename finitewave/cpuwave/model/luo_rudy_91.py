@@ -42,14 +42,6 @@ class LuoRudy91Kernel(IonicKernelGenerator):
         E_Na = ({model['R']}*{model['T']}/{model['F']}) * np.log({model['nao']}/{model['nai']})
         E_K1 = ({model['R']}*{model['T']}/{model['F']}) * np.log({model['ko']}/{model['ki']})
 
-        {model['m']} += dt * calc_dm(u_loc, {model['m']})
-        {model['h']} += dt * calc_dh(u_loc, {model['h']})
-        {model['j']} += dt * calc_dj(u_loc, {model['j']})
-
-        {model['d']} += dt * calc_dd(u_loc, {model['d']})
-        {model['f']} += dt * calc_df(u_loc, {model['f']})
-        {model['x']} += dt * calc_dx(u_loc, {model['x']})
-
         ina = calc_ina(u_loc, {model['m']}, {model['h']}, {model['j']}, E_Na, {model['gna']})
         isi = calc_isk(u_loc, {model['d']}, {model['f']}, {model['cai']}, {model['gsi']})
         {model['cai']} += dt * calc_dcai({model['cai']}, isi)
@@ -61,6 +53,14 @@ class LuoRudy91Kernel(IonicKernelGenerator):
         ib  = calc_ib(u_loc, {model['gb']})
 
         {u_new} += dt * calc_rhs(ina, isi, ik, ik1, ikp, ib)
+
+        {model['m']} += dt * calc_dm(u_loc, {model['m']})
+        {model['h']} += dt * calc_dh(u_loc, {model['h']})
+        {model['j']} += dt * calc_dj(u_loc, {model['j']})
+
+        {model['d']} += dt * calc_dd(u_loc, {model['d']})
+        {model['f']} += dt * calc_df(u_loc, {model['f']})
+        {model['x']} += dt * calc_dx(u_loc, {model['x']})
     """
 
 

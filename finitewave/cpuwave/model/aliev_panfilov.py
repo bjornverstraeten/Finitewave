@@ -43,10 +43,10 @@ class AlievPanfilovKernel(IonicKernelGenerator):
         
         return f"""\
 
+        {u_new} += dt * calc_rhs({model['u']}, {model['v']}, {model['a']}, {model['k']})
+
         {model['v']} += dt * calc_dv({model['v']}, {model['u']}, 
             {model['a']}, {model['k']}, {model['eps']}, {model['mu1']}, {model['mu2']})
-
-        {u_new} += dt * calc_rhs({model['u']}, {model['v']}, {model['a']}, {model['k']})
 """
 
 

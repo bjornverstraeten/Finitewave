@@ -34,10 +34,10 @@ class BarkleyKernel(IonicKernelGenerator):
         u_new = f"u_new{self._raw_indexing()}"
 
         return f"""\
-        {model['v']} += dt * calc_dv({model['v']}, {model['u']})
-
         {u_new} += dt * calc_rhs({model['u']}, {model['v']}, {model['a']}, 
             {model['b']}, {model['eps']})
+
+        {model['v']} += dt * calc_dv({model['v']}, {model['u']})
 """
 
 

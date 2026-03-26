@@ -42,15 +42,6 @@ class  MitchellSchaefferKernel(IonicKernelGenerator):
         u_new = f"u_new{self._raw_indexing()}"
         
         return f"""\
-
-        {model['h']} += dt*calc_dh(
-            {model['h']},
-            {model['u']},
-            {model['tau_close']},
-            {model['tau_open']},
-            {model['u_gate']}
-        )
-
         J_in = calc_J_in(
             {model['u']},
             {model['h']},
@@ -64,6 +55,14 @@ class  MitchellSchaefferKernel(IonicKernelGenerator):
 
         {u_new} += dt*calc_rhs(J_in, J_out) 
 
+        {model['h']} += dt*calc_dh(
+            {model['h']},
+            {model['u']},
+            {model['tau_close']},
+            {model['tau_open']},
+            {model['u_gate']}
+        )
+        
 """
 
 
