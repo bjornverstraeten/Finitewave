@@ -1,6 +1,6 @@
 # Finitewave
 
-[![License](https://img.shields.io/github/license/finitewave/Finitewave)](https://github.com/finitewave/Finitewave/blob/main/LICENSE)  [![Test status](https://github.com/finitewave/Finitewave/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/finitewave/Finitewave/actions/workflows/test.yml)  [![Code coverage](https://codecov.io/gh/finitewave/Finitewave/branch/develop/graph/badge.svg)](https://codecov.io/gh/finitewave/Finitewave)
+[![License](https://img.shields.io/github/license/finitewave/Finitewave)](https://github.com/finitewave/Finitewave/blob/main/LICENSE)  [![PyPI version](https://img.shields.io/pypi/v/finitewave.svg)](https://pypi.org/project/finitewave/)  [![Test status](https://github.com/finitewave/Finitewave/actions/workflows/test.yml/badge.svg?branch=develop)](https://github.com/finitewave/Finitewave/actions/workflows/test.yml)  [![Code coverage](https://codecov.io/gh/finitewave/Finitewave/branch/develop/graph/badge.svg)](https://codecov.io/gh/finitewave/Finitewave)
 
 Finitewave is a lightweight Python framework for simulating cardiac electrophysiology in 2D and 3D using finite-difference methods.
 It is designed to make cardiac modeling accessible from the very first simulation, with a clear and modular structure that supports experimentation, learning, and customization. Its Python foundation allows straightforward integration with other libraries (e.g., NumPy, Matplotlib, SciPy, Jupyter) and makes it ideal for use in educational and research settings.

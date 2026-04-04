@@ -1,0 +1,51 @@
+name: Finitewave Full Check
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  install-smoke:
+    runs-on: ubuntu-latest
+
+    env:
+      NUMBA_DISABLE_JIT: "1"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install package from repository
+        run: |
+          python -m pip install --upgrade pip
+          pip install .
+          python -c "import finitewave; print('finitewave local install OK')"
+
+      - name: Show installed packages
+        run: |
+          python -m pip list
+
+  install-from-pypi:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install package from PyPI
+        run: |
+          python -m pip install --upgrade pip
+          pip install finitewave
+          python -c "import finitewave; print('finitewave PyPI install OK')"
+
+      - name: Show installed packages
+        run: |
+          python -m pip list
