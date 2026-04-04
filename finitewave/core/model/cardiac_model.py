@@ -63,6 +63,9 @@ class CardiacModel(ABC):
         self.state_saver = None
         self.stencil = None
 
+        self.observers = []
+        self._buffs = [] # observer buffers
+
         self.diffusion_kernel = None
         self.ionic_kernel = None
 
@@ -127,7 +130,7 @@ class CardiacModel(ABC):
 
         self.weights = self.stencil.compute_weights(self, self.cardiac_tissue)
 
-    def run(self, initialize=True, num_of_theads=None):
+    def run(self, initialize=True, num_of_threads=None):
         """
         Runs the simulation loop. Handles stimuli, diffusion, ionic kernel
         updates, and tracking.
@@ -143,13 +146,13 @@ class CardiacModel(ABC):
 
         numba.set_num_threads(numba.config.NUMBA_NUM_THREADS)
 
-        if num_of_theads is not None:
-            if num_of_theads > numba.config.NUMBA_NUM_THREADS:
+        if num_of_threads is not None:
+            if num_of_threads > numba.config.NUMBA_NUM_THREADS:
                 warnings.warn(
-                    f"Selected number of threads ({num_of_theads}) exceeds the available threads ({numba.config.NUMBA_NUM_THREADS}). "
+                    f"Selected number of threads ({num_of_threads}) exceeds the available threads ({numba.config.NUMBA_NUM_THREADS}). "
                     f"Using the maximum available threads instead."
                 )
-            num_of_theads = min(num_of_theads, numba.config.NUMBA_NUM_THREADS)
+            num_of_theads = min(num_of_threads, numba.config.NUMBA_NUM_THREADS)
             numba.set_num_threads(num_of_theads)
 
         if self.t_max < self.t:
@@ -237,3 +240,76 @@ class CardiacModel(ABC):
             A deep copy of the current CardiacModel instance.
         """
         return copy.deepcopy(self)
+    
+    def _initialize_variables_and_parameters(self, ops):
+        self.default_parameters = ops.get_parameters()
+        self.default_variables = ops.get_variables()
+
+        self.state_vars = self.default_variables.keys()
+        self.state_pars = list(self.default_parameters.keys())
+
+        # expose parameters as direct attributes (scalar or array)
+        for name, value in self.default_parameters.items():
+            setattr(self, name, value)
+
+        # expose initial conditions as init_*
+        for name, value in self.default_variables.items():
+            setattr(self, f"init_{name}", value)
+
+        # declare arrays (optional, for readability/debug)
+        for name in self.default_variables.keys():
+            setattr(self, name, np.ndarray)      
+
+    def _allocate_state_arrays(self):
+        # allocate state arrays
+        for name in self.default_variables.keys():
+            init_val = getattr(self, f"init_{name}")
+            setattr(self, name, init_val * np.ones_like(self.u, dtype=self.npfloat))
+            if name == 'u':
+                self.u_new = self.u.copy()
+
+        # validate parameter fields shapes if they are arrays
+        tissue_shape = self.cardiac_tissue.mesh.shape
+        for name in self.default_parameters.keys():
+            par = getattr(self, name)
+            if isinstance(par, np.ndarray):
+                if par.shape != tissue_shape:
+                    raise ValueError(
+                        f"param '{name}' shape {par.shape} != tissue shape {tissue_shape}"
+                    ) 
+    
+    def _initialize_kernel(self, kernel, exclude_params=[]):
+        gen = kernel()
+        self._kernel_args_order = gen.args_order[:]
+
+        # args_order: state vars first, then all parameters (stable order for call site)
+        param_names = list(self.default_parameters.keys())
+        var_names = list(self.default_variables.keys())
+
+        # Tell generator which names are arrays vs scalars (for indexing decisions)
+        for name in var_names:
+            gen.arrays.append(name)
+
+        for name in param_names:
+            if name in exclude_params: # computed internally
+                continue
+            par = getattr(self, name)
+            if np.isscalar(par):
+                gen.scalars.append(name)
+            elif isinstance(par, np.ndarray):
+                gen.arrays.append(name)
+
+        return gen
+
+    def _form_and_verify_observers(self):
+        buffs = []
+        for obs in self.observers:
+            name = obs["name"] 
+            try:
+                buffs.append(getattr(self, name))
+            except AttributeError as e:
+                raise AttributeError(
+                    f"Observer buffer '{name}' not found on model. "
+                    f"Create it before initialize(), e.g.: model.{name} = np.zeros(...)."
+                ) from e
+        return buffs

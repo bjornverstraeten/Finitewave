@@ -1,7 +1,6 @@
 import random
 import numpy as np
-from finitewave.cpuwave3D.fibrosis.diffuse_3d_pattern import Diffuse3DPattern
-from finitewave.cpuwave3D.fibrosis.structural_3d_pattern import Structural3DPattern
+import finitewave as fw
 
 def test_diffuse_fibrosis_3d():
     shape = (100, 100, 100)
@@ -12,7 +11,7 @@ def test_diffuse_fibrosis_3d():
 
     random.seed(0)
 
-    pattern = Diffuse3DPattern(density=density, x1=x1, x2=x2, y1=y1, y2=y2, z1=z1, z2=z2)
+    pattern = fw.DiffusePattern(density=density, x1=x1, x2=x2, y1=y1, y2=y2, z1=z1, z2=z2)
     result = pattern.generate(shape=shape)
 
     assert result.shape == shape, "Diffuse: shape mismatch"
@@ -36,7 +35,7 @@ def test_structural_fibrosis_3d():
 
     random.seed(0)
 
-    pattern = Structural3DPattern(
+    pattern = fw.StructuralPattern(
         density=density, length_i=length_i, length_j=length_j, length_k=length_k,
         x1=x1, x2=x2, y1=y1, y2=y2, z1=z1, z2=z2
     )

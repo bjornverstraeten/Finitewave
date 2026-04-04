@@ -57,25 +57,25 @@ import finitewave as fw
 n = 100
 nk = 10
 
-tissue = fw.CardiacTissue3D([n, n, nk])
+tissue = fw.CardiacTissue([n, n, nk])
 # create a mesh of cardiomyocytes (elems = 1):
 tissue.mesh = np.ones([n, n, nk], dtype="uint8")
 # add empty nodes on the sides (elems = 0):
 tissue.add_boundaries()
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov3D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 300
 
 # induce spiral wave:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord3D(0, 1, 0, n, 0, n//2, 0, nk))
-stim_sequence.add_stim(fw.StimVoltageCoord3D(31, 1, 0, n//2, 0, n, 0, nk))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, n, 0, n//2, 0, nk))
+stim_sequence.add_stim(fw.StimVoltageCoord(31, 1, 0, n//2, 0, n, 0, nk))
 
 tracker_sequence = fw.TrackerSequence()
-period_tracker = fw.Period3DTracker()
+period_tracker = fw.PeriodTracker()
 positions = np.array([[1, 1, 5],
                       [5, 5, 5],
                       [7, 3, 5],
@@ -96,7 +96,6 @@ aliev_panfilov.tracker_sequence = tracker_sequence
 
 aliev_panfilov.run()
 
-# get the wave period as a pandas Series with the cell index as the index:
 periods = period_tracker.output
 
 # plot the wave period:

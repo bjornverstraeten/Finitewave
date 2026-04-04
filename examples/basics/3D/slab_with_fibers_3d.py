@@ -48,8 +48,6 @@ Applications:
 
 
 import finitewave as fw
-
-import matplotlib.pyplot as plt
 import numpy as np
 
 
@@ -59,7 +57,7 @@ n_j = 200
 n_k = 100
 
 # set up the cardiac tissue:
-tissue = fw.CardiacTissue3D((n_i, n_j, n_k))
+tissue = fw.CardiacTissue((n_i, n_j, n_k))
 # orientation of fibers changes along the z-axis from -pi/3 to pi/2
 phi_k = np.linspace(- np.pi / 3, np.pi / 2, n_k - 2)
 # add fibers orientation vectors
@@ -71,12 +69,12 @@ for k, phi in enumerate(phi_k):
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord3D(0, 1,
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1,
                                              n_i // 2 - 5, n_i // 2 + 5,
                                              n_j // 2 - 5, n_j // 2 + 5,
                                              0, n_k))
 # create model object:
-mitchell_schaeffer = fw.MitchellSchaeffer3D()
+mitchell_schaeffer = fw.MitchellSchaeffer()
 # set up numerical parameters:
 mitchell_schaeffer.dt = 0.01
 mitchell_schaeffer.dr = 0.25

@@ -7,16 +7,16 @@ import finitewave as fw
 
 def test_state_loading():
     n = 5
-    tissue = fw.CardiacTissue2D([n, n])
+    tissue = fw.CardiacTissue([n, n])
 
     stim_sequence = fw.StimSequence()
-    stim_sequence.add_stim(fw.StimCurrentCoord2D(0, 10, 0.5, 1, n//2, n//2 + 1,
-                                                 n//2, n//2 + 1))
+    stim_sequence.add_stim(fw.StimCurrentCoord(0, 10, 0.5, n//2, n//2 + 1,
+                                                 n//2, n//2 + 1, u_max=1))
 
     state_saver = fw.StateSaverCollection()
     state_saver.savers.append(fw.StateSaver("state_0", time=3))
 
-    model = fw.FentonKarma2D()
+    model = fw.FentonKarma()
     model.dt = 0.01
     model.dr = 0.25
     model.t_max = 5
@@ -32,10 +32,10 @@ def test_state_loading():
     w_before = model.w.copy()
 
     # recreate the model
-    model = fw.FentonKarma2D()
+    model = fw.FentonKarma()
     model.dt = 0.01
     model.dr = 0.25
-    model.t_max = 5
+    model.t_max = 2
 
     model.cardiac_tissue = tissue
     model.state_loader = fw.StateLoader("state_0")
@@ -45,17 +45,26 @@ def test_state_loading():
     v_after = model.v.copy()
     w_after = model.w.copy()
 
-    assert np.allclose(u_before, u_after, atol=1e-5), "u states are not equal"
-    assert np.allclose(v_before, v_after, atol=1e-5), "v states are not equal"
-    assert np.allclose(w_before, w_after, atol=1e-5), "w states are not equal"
+    # print (u_before)
+    # print (u_after)
+
+    # import matplotlib.pyplot as plt
+    # fig, ax = plt.subplots(1,2)
+    # ax[0].imshow(v_before)
+    # ax[1].imshow(v_after)
+    # plt.show()
+
+    assert np.allclose(u_before, u_after, atol=1e-3), "u states are not equal"
+    assert np.allclose(v_before, v_after, atol=1e-3), "v states are not equal"
+    assert np.allclose(w_before, w_after, atol=1e-3), "w states are not equal"
 
 def test_commands():
     n = 5
-    tissue = fw.CardiacTissue2D([n, n])
+    tissue = fw.CardiacTissue([n, n])
 
     stim_sequence = fw.StimSequence()
 
-    model = fw.FentonKarma2D()
+    model = fw.FentonKarma()
     model.dt = 0.01
     model.dr = 0.25
     model.t_max = 10

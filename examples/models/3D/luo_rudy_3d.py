@@ -35,24 +35,26 @@ n = 100
 m = 5
 k = 3
 # create mesh
-tissue = fw.CardiacTissue3D((n, m, k))
+tissue = fw.CardiacTissue((n, m, k))
 
 # set up stimulation parameters
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord3D(0, 1, 0, 5, 0, m, 0, k))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 5, 0, m, 0, k))
 
 # create model object and set up parameters
-luo_rudy = fw.LuoRudy913D()
+luo_rudy = fw.LuoRudy91()
 luo_rudy.dt = 0.01
 luo_rudy.dr = 0.25
 luo_rudy.t_max = 500
+
+luo_rudy.ik_obs = [0.0] 
 
 # add the tissue and the stim parameters to the model object
 luo_rudy.cardiac_tissue = tissue
 luo_rudy.stim_sequence = stim_sequence
 
 tracker_sequence = fw.TrackerSequence()
-action_pot_tracker = fw.ActionPotential3DTracker()
+action_pot_tracker = fw.ActionPotentialTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 # eather list or list of lists can be used
 action_pot_tracker.cell_ind = [[50, 3, 1]]

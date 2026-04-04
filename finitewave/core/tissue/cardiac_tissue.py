@@ -19,8 +19,13 @@ class CardiacTissue(ABC):
         This array is used to define Dirichlet boundary conditions as points
         with non-zero values are ignored in the solver.
     """
-    def __init__(self):
-        self.meta = {}
+    def __init__(self, shape):
+        super().__init__()
+        self.dimensions = len(shape)
+        self.meta = {"shape": shape}
+        self.mesh = np.ones(shape, dtype=np.int8)
+        self.conductivity = 1.0
+        self.fibers = None
         self.special_boundaries = None
 
     @property
@@ -45,7 +50,7 @@ class CardiacTissue(ABC):
         mesh : numpy.ndarray
             The tissue mesh array.
         """
-        if mesh.ndim != self.meta['dim']:
+        if mesh.ndim != self.dimensions:
             raise ValueError("Mesh dimension must match the tissue dimension.")
 
         self._mesh = mesh
@@ -62,13 +67,27 @@ class CardiacTissue(ABC):
 
         self.myo_indexes = np.flatnonzero(self.mesh == 1)
 
-    @abstractmethod
     def add_boundaries(self):
         """
-        Abstract method to be implemented by subclasses for adding boundary
-        conditions to the tissue mesh.
+        Sets the boundary values of the mesh to zero.
+
+        The boundaries are defined as the edges of the grid, and this method
+        updates these edges in the mesh array.
         """
-        pass
+        if self.dimensions == 2:
+            self.mesh[0, :] = 0
+            self.mesh[:, 0] = 0
+            self.mesh[-1, :] = 0
+            self.mesh[:, -1] = 0
+        elif self.dimensions == 3:
+            self.mesh[0, :, :] = 0
+            self.mesh[:, 0, :] = 0
+            self.mesh[:, :, 0] = 0
+            self.mesh[-1, :, :] = 0
+            self.mesh[:, -1, :] = 0
+            self.mesh[:, :, -1] = 0
+        else:
+            raise ValueError("add_boundaries method only supports 2D and 3D tissues.")
 
     def add_pattern(self, fibro_pattern):
         """

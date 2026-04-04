@@ -34,14 +34,14 @@ import finitewave as fw
 n = 100
 m = 5
 # create mesh
-tissue = fw.CardiacTissue2D((n, m))
+tissue = fw.CardiacTissue((n, m))
 
 # set up stimulation parameters
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, 5, 0, m))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 5, 0, m))
 
 # create model object and set up parameters
-luo_rudy = fw.LuoRudy912D()
+luo_rudy = fw.LuoRudy91()
 luo_rudy.dt = 0.01
 luo_rudy.dr = 0.25
 luo_rudy.t_max = 500
@@ -51,7 +51,7 @@ luo_rudy.cardiac_tissue = tissue
 luo_rudy.stim_sequence = stim_sequence
 
 tracker_sequence = fw.TrackerSequence()
-action_pot_tracker = fw.ActionPotential2DTracker()
+action_pot_tracker = fw.ActionPotentialTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 # eather list or list of lists can be used
 action_pot_tracker.cell_ind = [[50, 3]]

@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: Finitewave
+message: "If you use Finitewave in your research, please cite this repository."
+authors:
+  - family-names: Nezlobinsky
+    given-names: Timur
+  - family-names: Okenov
+    given-names: Arstanbek
+repository-code: https://github.com/finitewave/finitewave
+license: MIT

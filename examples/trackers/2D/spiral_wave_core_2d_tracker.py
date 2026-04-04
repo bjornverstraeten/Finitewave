@@ -55,23 +55,23 @@ import finitewave as fw
 
 # set up the tissue:
 n = 200
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, n, 0, n//2))
-stim_sequence.add_stim(fw.StimVoltageCoord2D(31, 1, 0, n//2, 0, n))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, n, 0, n//2))
+stim_sequence.add_stim(fw.StimVoltageCoord(31, 1, 0, n//2, 0, n))
 
 # set up tracker parameters:
 tracker_sequence = fw.TrackerSequence()
-sw_core_tracker = fw.SpiralWaveCore2DTracker()
+sw_core_tracker = fw.SpiralWaveCoreTracker()
 sw_core_tracker.threshold = 0.5
 sw_core_tracker.start_time = 50
 sw_core_tracker.step = 100  # Record the spiral wave core every 1 time unit
 tracker_sequence.add_tracker(sw_core_tracker)
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 300

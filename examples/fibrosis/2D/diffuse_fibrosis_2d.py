@@ -29,8 +29,8 @@ import finitewave as fw
 
 n = 200
 # create mesh
-tissue = fw.CardiacTissue2D((n, n))
-tissue.add_pattern(fw.Diffuse2DPattern(0.2))
+tissue = fw.CardiacTissue((n, n))
+tissue.add_pattern(fw.DiffusePattern(0.2))
 
 plt.title("2D Diffuse Fibrosis Medium with 20% Fibrosis Density")
 plt.imshow(tissue.mesh)

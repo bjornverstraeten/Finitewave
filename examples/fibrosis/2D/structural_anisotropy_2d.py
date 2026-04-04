@@ -46,22 +46,21 @@ This example is useful for exploring:
 
 """
 
-import numpy as np
 import matplotlib.pyplot as plt
 import finitewave as fw
 
 n = 400
 # create mesh
-tissue = fw.CardiacTissue2D((n, n))
-tissue.add_pattern(fw.Structural2DPattern(density=0.15, length_i=1, length_j=4, x1=0, x2=n, y1=0, y2=n))
+tissue = fw.CardiacTissue((n, n))
+tissue.add_pattern(fw.StructuralPattern(density=0.15, length_i=1, length_j=4, x1=0, x2=n, y1=0, y2=n))
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, n//2 - 5, n//2 + 5,
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, n//2 - 5, n//2 + 5,
                                              n//2 - 5, n//2 + 5))
 
 # create model object and set up parameters:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 30

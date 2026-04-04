@@ -36,16 +36,12 @@ To visualize the result, refer to the generated animation (e.g.,
 
 """
 
-import matplotlib.pyplot as plt
-import numpy as np
-import shutil
-
 import finitewave as fw
 
 # number of nodes on the side
 n = 300
 
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 # create a mesh of cardiomyocytes (elems = 1):
 for i in range(0, 40, 5):
     if i%10 == 0:
@@ -54,7 +50,7 @@ for i in range(0, 40, 5):
         tissue.mesh[10*i:10*(i+3), 50:] = 0
 
 # create model object:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 # set up numerical parameters:
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
@@ -62,11 +58,11 @@ aliev_panfilov.t_max = 200
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, int(n*0.03),
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, int(n*0.03),
                                                  0, n))
 
 tracker_sequence = fw.TrackerSequence()
-animation_tracker = fw.Animation2DTracker()
+animation_tracker = fw.AnimationTracker()
 animation_tracker.variable_name = "u"  # Specify the variable to track
 animation_tracker.dir_name = "anim_data"
 animation_tracker.step = 10

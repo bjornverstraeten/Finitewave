@@ -35,14 +35,14 @@ import finitewave as fw
 n = 100
 m = 5
 # create mesh
-tissue = fw.CardiacTissue2D((n, m))
+tissue = fw.CardiacTissue((n, m))
 
 # set up stimulation parameters
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1, 0, 5, 0, m))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 5, 0, m))
 
 # create model object and set up parameters
-tp06 = fw.TP062D()
+tp06 = fw.TenTusscherPanfilov2006()
 tp06.dt = 0.01
 tp06.dr = 0.25
 tp06.t_max = 500
@@ -52,14 +52,14 @@ tp06.cardiac_tissue = tissue
 tp06.stim_sequence = stim_sequence
 
 tracker_sequence = fw.TrackerSequence()
-action_pot_tracker = fw.ActionPotential2DTracker()
+action_pot_tracker = fw.ActionPotentialTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 # eather list or list of lists can be used
 action_pot_tracker.cell_ind = [[50, 3]]
 action_pot_tracker.step = 1
 tracker_sequence.add_tracker(action_pot_tracker)
 tp06.tracker_sequence = tracker_sequence
-
+# print (tissue.mesh)
 # run the model:
 tp06.run()
 

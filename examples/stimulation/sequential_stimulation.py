@@ -37,21 +37,19 @@ This setup is ideal for:
 
 """
 
-import matplotlib.pyplot as plt
 import numpy as np
-
 import finitewave as fw
 
 # set up the tissue:
 n = 200
-tissue = fw.CardiacTissue2D([n, n])
+tissue = fw.CardiacTissue([n, n])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
 # Here we create a sequence of stimuli from different corners of a square mesh. 
 # The stimulation object in the sequence can be of any type (class).
 stim_sequence.add_stim(
-    fw.StimVoltageCoord2D(time=0, 
+    fw.StimVoltageCoord(time=0, 
                           volt_value=1.0, 
                           x1=0, x2=5, 
                           y1=0, y2=5)
@@ -60,14 +58,14 @@ stim_sequence.add_stim(
 stim_matrix = np.full([n, n], False, dtype=bool)
 stim_matrix[0:5, n-5:n] = True
 stim_sequence.add_stim(
-    fw.StimCurrentMatrix2D(time=70, 
+    fw.StimCurrentMatrix(time=70, 
                            curr_value=5, 
                            duration=0.6, 
                            matrix=stim_matrix)
 )
 
 stim_sequence.add_stim(
-    fw.StimVoltageCoord2D(time=140,
+    fw.StimVoltageCoord(time=140,
                           volt_value=0.5,
                           x1=n-10, x2=n,
                           y1=n-10, y2=n)
@@ -75,7 +73,7 @@ stim_sequence.add_stim(
 
 # set up tracker parameters:
 tracker_sequence = fw.TrackerSequence()
-animation_tracker = fw.Animation2DTracker()
+animation_tracker = fw.AnimationTracker()
 animation_tracker.variable_name = "u"  # Specify the variable to track
 animation_tracker.dir_name = "anim_data"
 animation_tracker.step = 10
@@ -83,7 +81,7 @@ animation_tracker.overwrite = True  # Remove existing files in dir_name
 tracker_sequence.add_tracker(animation_tracker)
 
 # create model object and set up parameters:
-aliev_panfilov = fw.AlievPanfilov2D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 170

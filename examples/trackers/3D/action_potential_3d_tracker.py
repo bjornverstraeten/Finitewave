@@ -48,15 +48,15 @@ n = 100
 nj = 100
 nk = 10
 
-tissue = fw.CardiacTissue3D([n, nj, nk])
+tissue = fw.CardiacTissue([n, nj, nk])
 
 # set up stimulation parameters:
 stim_sequence = fw.StimSequence()
-stim_sequence.add_stim(fw.StimVoltageCoord3D(0, 1, 0, 3, 0, nj, 0, nk))
+stim_sequence.add_stim(fw.StimVoltageCoord(0, 1, 0, 3, 0, nj, 0, nk))
 
 # set up tracker parameters:
 tracker_sequence = fw.TrackerSequence()
-action_pot_tracker = fw.ActionPotential3DTracker()
+action_pot_tracker = fw.ActionPotentialTracker()
 # to specify the mesh node under the measuring - use the cell_ind field:
 # eather list or list of lists can be used
 action_pot_tracker.cell_ind = [[30, 30, 5], [70, 70, 8]]
@@ -64,7 +64,7 @@ action_pot_tracker.step = 1
 tracker_sequence.add_tracker(action_pot_tracker)
 
 # create model object and set up parameters:
-aliev_panfilov = fw.AlievPanfilov3D()
+aliev_panfilov = fw.AlievPanfilov()
 aliev_panfilov.dt = 0.01
 aliev_panfilov.dr = 0.25
 aliev_panfilov.t_max = 50

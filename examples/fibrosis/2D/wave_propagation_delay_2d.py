@@ -37,18 +37,18 @@ n = 300
 stim_x1, stim_x2 = 0, 5  # planar stimulus strip
 
 def setup_tissue(with_fibrosis):
-    tissue = fw.CardiacTissue2D((n, n))
+    tissue = fw.CardiacTissue((n, n))
     if with_fibrosis:
-        tissue.add_pattern(fw.Diffuse2DPattern(density=0.2))
+        tissue.add_pattern(fw.DiffusePattern(density=0.2))
     return tissue
 
 def run_simulation(tissue):
     stim_sequence = fw.StimSequence()
-    stim_sequence.add_stim(fw.StimVoltageCoord2D(0, 1,
+    stim_sequence.add_stim(fw.StimVoltageCoord(0, 1,
                                                  x1=stim_x1, x2=stim_x2,
                                                  y1=0, y2=n))
     
-    model = fw.AlievPanfilov2D()
+    model = fw.AlievPanfilov()
     model.dt = 0.01
     model.dr = 0.25
     model.t_max = 20
