@@ -426,7 +426,7 @@ class Courtemanche(CardiacModel):
     """
     def __init__(self):
         super().__init__()
-        self.D_model = 1.0
+        self.D_model = 0.154
         self.npfloat = "float64"
 
         self._initialize_variables_and_parameters(ops)
