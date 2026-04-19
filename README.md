@@ -147,7 +147,7 @@ plt.tight_layout()
 plt.show()
 ```
 
-![Alt text](quick_start_output.png)
+![Alt text](images/quick_start_output.png)
 
 Now, let's move on to a detailed explanation. 
 
