@@ -199,6 +199,12 @@ class CourtemancheKernel(IonicKernelGenerator):
             {model['ipcamax']}, cai_old, {model['Cm']}
         )
 
+        irel = calc_irel(
+            urel_old, vrel_old, wrel_old,
+            {model['krel']},
+            carel_old, cai_old
+        )
+
         Fn = calc_Fn(irel, ical, inaca, {model['F']}, {model['Vrel']})
 
         tau_urel = calc_tau_urel()
@@ -212,12 +218,6 @@ class CourtemancheKernel(IonicKernelGenerator):
         tau_wrel = calc_tau_wrel(u_old)
         wrel_inf = calc_wrel_inf(u_old)
         wrel_new = calc_gating_variable_rush_larsen(wrel_old, wrel_inf, tau_wrel, dt)
-
-        irel = calc_irel(
-            urel_old, vrel_old, wrel_old,
-            {model['krel']},
-            carel_old, cai_old
-        )
 
         itr = calc_itr(caup_old, carel_old)
         iup = calc_iup({model['iupmax']}, cai_old, {model['kup']})
